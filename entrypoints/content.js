@@ -33,6 +33,36 @@ export default defineContentScript({
       return Array.from(usernameInputs);
     }
 
+    // Add visual indicator to detected fields
+    function addVisualIndicator(field) {
+      if (field.dataset.passforgeDetected) return; // Already marked
+
+      field.dataset.passforgeDetected = 'true';
+      field.style.outline = '2px solid #3498db';
+      field.style.outlineOffset = '2px';
+
+      // Add icon to the field
+      const icon = document.createElement('span');
+      icon.textContent = '🔐';
+      icon.style.cssText = `
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        font-size: 16px;
+        z-index: 10000;
+      `;
+
+      // Make parent relative if needed
+      const parent = field.parentElement;
+      if (parent && getComputedStyle(parent).position === 'static') {
+        parent.style.position = 'relative';
+      }
+
+      field.parentElement?.appendChild(icon);
+    }
+
     // Detect login forms
     function detectLoginForms() {
       const passwordFields = detectPasswordFields();
@@ -53,6 +83,10 @@ export default defineContentScript({
             passwordField,
             domain: currentDomain
           });
+
+          // Add visual indicators
+          addVisualIndicator(usernameField);
+          addVisualIndicator(passwordField);
         }
       });
 
