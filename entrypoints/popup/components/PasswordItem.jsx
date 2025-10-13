@@ -1,4 +1,8 @@
+import { useState } from 'react'
+
 function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <div className="password-item">
       <div className="password-item-header">
