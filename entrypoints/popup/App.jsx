@@ -3,6 +3,7 @@ import LoginView from './components/LoginView';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import PasswordList from './components/PasswordList';
+import AddPasswordForm from './components/AddPasswordForm';
 import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
@@ -11,6 +12,7 @@ function App() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleLock = () => {
     setSearchQuery('');
@@ -48,6 +50,15 @@ function App() {
         onCopyUsername={copyToClipboard}
         onCopyPassword={copyToClipboard}
       />
+
+      {showAddForm && (
+        <AddPasswordForm
+          onClose={() => setShowAddForm(false)}
+          onSubmit={(data) => {
+            addPassword(data);
+          }}
+        />
+      )}
 
       <div className="footer">
         <button className="btn-add">+ Add Password</button>
