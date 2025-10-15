@@ -10,6 +10,8 @@ function AddPasswordForm({ onClose, onSubmit }) {
     notes: ''
   });
 
+  const [errors, setErrors] = useState({});
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -20,6 +22,24 @@ function AddPasswordForm({ onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const newErrors = {};
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     onSubmit(formData);
     setFormData({
       title: '',
@@ -108,6 +128,20 @@ function AddPasswordForm({ onClose, onSubmit }) {
             onChange={handleChange}
             placeholder="Add any additional notes (optional)"
           />
+
+          {Object.keys(errors).length > 0 && (
+            <div style={{
+              padding: '8px 12px',
+              background: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: '4px',
+              marginTop: '12px'
+            }}>
+              {Object.values(errors).map((error, idx) => (
+                <div key={idx} style={{ color: '#c33', fontSize: '0.8rem' }}>{error}</div>
+              ))}
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
             <button
