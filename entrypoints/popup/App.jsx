@@ -3,6 +3,7 @@ import LoginView from './components/LoginView';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import PasswordList from './components/PasswordList';
+import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
 function App() {
