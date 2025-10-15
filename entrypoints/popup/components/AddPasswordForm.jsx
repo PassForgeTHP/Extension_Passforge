@@ -1,6 +1,22 @@
+import { useState } from 'react';
 import FormField from './FormField';
 
 function AddPasswordForm({ onClose, onSubmit }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    domain: '',
+    username: '',
+    password: '',
+    notes: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
   return (
     <div className="add-password-form" style={{
       position: 'fixed',
@@ -43,17 +59,23 @@ function AddPasswordForm({ onClose, onSubmit }) {
           <FormField
             label="Title"
             name="title"
+            value={formData.title}
+            onChange={handleChange}
             placeholder="e.g., GitHub Account"
             required
           />
           <FormField
             label="Domain"
             name="domain"
+            value={formData.domain}
+            onChange={handleChange}
             placeholder="e.g., github.com"
           />
           <FormField
             label="Username"
             name="username"
+            value={formData.username}
+            onChange={handleChange}
             placeholder="Enter username or email"
             required
           />
@@ -61,6 +83,8 @@ function AddPasswordForm({ onClose, onSubmit }) {
             label="Password"
             type="password"
             name="password"
+            value={formData.password}
+            onChange={handleChange}
             placeholder="Enter password"
             required
           />
@@ -68,6 +92,8 @@ function AddPasswordForm({ onClose, onSubmit }) {
             label="Notes"
             type="textarea"
             name="notes"
+            value={formData.notes}
+            onChange={handleChange}
             placeholder="Add any additional notes (optional)"
           />
         </form>
