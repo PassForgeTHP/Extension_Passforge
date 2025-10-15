@@ -49,6 +49,8 @@ function App() {
         copiedId={copiedId}
         onCopyUsername={copyToClipboard}
         onCopyPassword={copyToClipboard}
+        onDelete={deletePassword}
+        onEdit={(password) => console.log('Edit:', password)}
       />
 
       {showAddForm && (
