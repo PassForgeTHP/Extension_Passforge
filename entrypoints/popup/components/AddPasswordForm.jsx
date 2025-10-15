@@ -51,6 +51,12 @@ function AddPasswordForm({ onClose, onSubmit }) {
             name="domain"
             placeholder="e.g., github.com"
           />
+          <FormField
+            label="Username"
+            name="username"
+            placeholder="Enter username or email"
+            required
+          />
         </form>
       </div>
     </div>
