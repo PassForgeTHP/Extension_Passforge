@@ -17,6 +17,10 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onD
     }
   };
 
+  const handleEdit = (password) => {
+    onEdit(password);
+  };
+
   if (passwords.length === 0) {
     return (
       <div className="password-list">
@@ -56,7 +60,7 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onD
           onCopyUsername={() => onCopyUsername(pwd.username, `${pwd.id}-user`)}
           onCopyPassword={() => onCopyPassword(pwd.password, `${pwd.id}-pass`)}
           onDelete={handleDelete}
-          onEdit={onEdit}
+          onEdit={handleEdit}
         />
       ))}
     </div>
