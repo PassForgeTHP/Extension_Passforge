@@ -64,6 +64,12 @@ function AddPasswordForm({ onClose, onSubmit }) {
             placeholder="Enter password"
             required
           />
+          <FormField
+            label="Notes"
+            type="textarea"
+            name="notes"
+            placeholder="Add any additional notes (optional)"
+          />
         </form>
       </div>
     </div>
