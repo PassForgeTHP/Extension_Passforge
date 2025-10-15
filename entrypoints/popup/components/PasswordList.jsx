@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PasswordItem from './PasswordItem';
 
-function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onDelete, onEdit }) {
+function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onDelete, onEdit, loading }) {
   const [sortOrder, setSortOrder] = useState('newest');
 
   const sortedPasswords = [...passwords].sort((a, b) => {
@@ -20,6 +20,16 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onD
   const handleEdit = (password) => {
     onEdit(password);
   };
+
+  if (loading) {
+    return (
+      <div className="password-list">
+        <div className="loading-state" style={{ textAlign: 'center', padding: '20px' }}>
+          <p>Loading passwords...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (passwords.length === 0) {
     return (
