@@ -9,6 +9,12 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
         <div className="password-icon">{password.name[0]}</div>
         <div className="password-info">
           <div className="password-name">{password.name}</div>
+          {password.domain && (
+            <div className="password-field">
+              <span className="password-label">Domain:</span>
+              <span className="password-value">{password.domain}</span>
+            </div>
+          )}
           <div
             className="password-field clickable"
             onClick={onCopyUsername}
