@@ -57,6 +57,13 @@ function AddPasswordForm({ onClose, onSubmit }) {
             placeholder="Enter username or email"
             required
           />
+          <FormField
+            label="Password"
+            type="password"
+            name="password"
+            placeholder="Enter password"
+            required
+          />
         </form>
       </div>
     </div>
