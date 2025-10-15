@@ -3,7 +3,7 @@ import FormField from './FormField';
 
 function AddPasswordForm({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     domain: '',
     username: '',
     password: '',
@@ -24,8 +24,8 @@ function AddPasswordForm({ onClose, onSubmit }) {
     e.preventDefault();
 
     const newErrors = {};
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
     }
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
@@ -42,7 +42,7 @@ function AddPasswordForm({ onClose, onSubmit }) {
     setErrors({});
     onSubmit(formData);
     setFormData({
-      title: '',
+      name: '',
       domain: '',
       username: '',
       password: '',
@@ -89,9 +89,9 @@ function AddPasswordForm({ onClose, onSubmit }) {
 
         <form onSubmit={handleSubmit}>
           <FormField
-            label="Title"
-            name="title"
-            value={formData.title}
+            label="Name"
+            name="name"
+            value={formData.name}
             onChange={handleChange}
             placeholder="e.g., GitHub Account"
             required
