@@ -22,6 +22,25 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword }) {
 
   return (
     <div className="password-list">
+      <div className="password-list-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
+          {passwords.length} password{passwords.length !== 1 ? 's' : ''}
+        </span>
+        <button
+          onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--medium-red)',
+            color: 'var(--medium-red)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            padding: '4px 8px',
+            borderRadius: '4px'
+          }}
+        >
+          Sort: {sortOrder === 'newest' ? 'Newest first' : 'Oldest first'}
+        </button>
+      </div>
       {sortedPasswords.map(pwd => (
         <PasswordItem
           key={pwd.id}
