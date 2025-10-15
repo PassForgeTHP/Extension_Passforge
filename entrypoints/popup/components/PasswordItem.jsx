@@ -60,6 +60,22 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
               </button>
             </div>
           </div>
+          {password.notes && (
+            <div className="password-field">
+              <span
+                className="password-label clickable"
+                onClick={() => setShowNotes(!showNotes)}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+              >
+                Notes: {showNotes ? '▼' : '▶'}
+              </span>
+              {showNotes && (
+                <div className="password-notes" style={{ marginTop: '4px', fontSize: '0.85rem' }}>
+                  {password.notes}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
