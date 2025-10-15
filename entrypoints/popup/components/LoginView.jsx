@@ -2,18 +2,33 @@ import { useState } from 'react';
 
 function LoginView({ onUnlock }) {
   const [masterPassword, setMasterPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword]=useState(false)
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Temporary: Accept any non-empty password
-    if (masterPassword.trim()) {
+try {
+    const res = await fetch("http://localhost:3000/users/sign_in", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: { email, password: masterPassword} })
+    });
+      if (!res.ok) {
+      throw new Error("Login failed");
+    }
+    const data = await res.json()
+    const token = res.headers.get("Authorization")?.split(" ")[1];
+    onUnlock(data.user, token)
+      if (masterPassword.trim()) {
       onUnlock();
       setError('');
-    } else {
-      setError('Please enter your master password');
-    }
+    } 
+} catch (error) {
+  setError(error.message)
+}
+   
+
   };
 
   return (
@@ -26,13 +41,24 @@ function LoginView({ onUnlock }) {
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <input
-            type="password"
+                        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="email-input"/>
+        <div className='login-extension'>
+                    <input
+            type={showPassword? 'text': 'password'}
             placeholder="Master password"
             value={masterPassword}
             onChange={(e) => setMasterPassword(e.target.value)}
             autoFocus
           />
+          <button
+          type='button'
+          onClick={()=>setShowPassword(!showPassword)}
+          className='eye-button'
+          aria-label="Display password"
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}

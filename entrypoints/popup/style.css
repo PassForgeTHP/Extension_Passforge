@@ -1,13 +1,13 @@
-:root {
+/* :root {
   --base-red: #77080e;
   --dark: #1a1720;
   --dark-red: #470508;
   --light: #e3d3bf;
   --medium-red: #af0024;
-  --gradient: linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%);
+  --gradient-dark: linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%);
   --shadow-light: rgba(255, 255, 255, 0.2);
   --shadow-dark: rgba(0, 0, 0, 0.3);
-}
+} */
 
 * {
   margin: 0;
@@ -43,7 +43,7 @@ body {
 
 /* Buttons */
 button {
-  background: var(--gradient);
+  background: var(--gradient-dark);
   color: var(--light);
   border: 1px solid var(--light);
   padding: 0.75rem 1.5rem;
@@ -66,6 +66,18 @@ button:active {
 }
 
 /* Input fields */
+
+.login-extension{
+  display: flex !important;
+  background-color: rgba(227, 211, 191, 0.1)!important;
+  border: 1px solid var(--light)!important;
+  padding: 0.75rem !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+}
+.login-extension input{
+  border: none !important;
+}
 input {
   background-color: rgba(227, 211, 191, 0.1);
   border: 1px solid var(--light);
@@ -139,7 +151,7 @@ input::placeholder {
   color: var(--light);
   margin-bottom: 0.5rem;
   font-size: 2rem;
-  background: var(--gradient);
+  background: var(--gradient-dark);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -186,7 +198,7 @@ input::placeholder {
 
 .header-title {
   font-size: 1.5rem;
-  background: var(--gradient);
+  background: var(--gradient-dark);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -251,7 +263,7 @@ input::placeholder {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--gradient);
+  background: var(--gradient-dark);
   display: flex;
   align-items: center;
   justify-content: center;
