@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
+function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId, onEdit, onDelete }) {
   const [showPassword, setShowPassword] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
 
@@ -77,6 +77,36 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
             </div>
           )}
         </div>
+      </div>
+      <div className="password-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+        <button
+          onClick={() => onEdit(password)}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--medium-red)',
+            color: 'var(--medium-red)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            padding: '4px 12px',
+            borderRadius: '4px'
+          }}
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => onDelete(password.id)}
+          style={{
+            background: 'var(--medium-red)',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            padding: '4px 12px',
+            borderRadius: '4px'
+          }}
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
