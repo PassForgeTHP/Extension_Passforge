@@ -58,6 +58,7 @@ function App() {
           onClose={() => setShowAddForm(false)}
           onSubmit={(data) => {
             addPassword(data);
+            setShowAddForm(false);
           }}
         />
       )}
