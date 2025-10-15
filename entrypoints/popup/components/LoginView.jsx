@@ -1,19 +1,31 @@
 import { useState } from 'react';
+import useVaultStore from '../../../services/vaultStore';
 
-function LoginView({ onUnlock }) {
+function LoginView() {
+  const unlock = useVaultStore(state => state.unlock);
+
   const [masterPassword, setMasterPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Temporary: Accept any non-empty password
-    if (masterPassword.trim()) {
-      onUnlock();
-      setError('');
-    } else {
+    if (!masterPassword.trim()) {
       setError('Please enter your master password');
+      return;
     }
+
+    setLoading(true);
+    setError('');
+
+    const result = await unlock(masterPassword);
+
+    if (!result.success) {
+      setError(result.error || 'Invalid master password');
+      setLoading(false);
+    }
+    // If success, isLocked becomes false automatically
   };
 
   return (
@@ -37,8 +49,8 @@ function LoginView({ onUnlock }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" className="btn-unlock">
-          Unlock
+        <button type="submit" className="btn-unlock" disabled={loading}>
+          {loading ? 'Unlocking...' : 'Unlock'}
         </button>
       </form>
     </div>
