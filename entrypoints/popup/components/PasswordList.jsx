@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PasswordItem from './PasswordItem';
 
-function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword }) {
+function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword, onDelete, onEdit }) {
   const [sortOrder, setSortOrder] = useState('newest');
 
   const sortedPasswords = [...passwords].sort((a, b) => {
@@ -9,6 +9,13 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword }) {
     const dateB = new Date(b.created_at || 0);
     return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
   });
+
+  const handleDelete = (id) => {
+    const password = passwords.find(p => p.id === id);
+    if (window.confirm(`Delete password for "${password?.name}"?`)) {
+      onDelete(id);
+    }
+  };
 
   if (passwords.length === 0) {
     return (
@@ -48,6 +55,8 @@ function PasswordList({ passwords, copiedId, onCopyUsername, onCopyPassword }) {
           copiedId={copiedId}
           onCopyUsername={() => onCopyUsername(pwd.username, `${pwd.id}-user`)}
           onCopyPassword={() => onCopyPassword(pwd.password, `${pwd.id}-pass`)}
+          onDelete={handleDelete}
+          onEdit={onEdit}
         />
       ))}
     </div>
