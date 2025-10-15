@@ -12,7 +12,7 @@ try {
     const res = await fetch("http://localhost:3000/users/sign_in", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user: { email, password: masterPassword} })
+      body: JSON.stringify({ user: { email:email, password: masterPassword} })
     });
       if (!res.ok) {
       throw new Error("Login failed");
@@ -20,10 +20,8 @@ try {
     const data = await res.json()
     const token = res.headers.get("Authorization")?.split(" ")[1];
     onUnlock(data.user, token)
-      if (masterPassword.trim()) {
-      onUnlock();
+          onUnlock();
       setError('');
-    } 
 } catch (error) {
   setError(error.message)
 }
@@ -41,9 +39,9 @@ try {
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
-                        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="email-input"/>
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <div className='login-extension'>
-                    <input
+          <input
             type={showPassword? 'text': 'password'}
             placeholder="Master password"
             value={masterPassword}

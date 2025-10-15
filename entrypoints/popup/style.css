@@ -1,4 +1,4 @@
-/* :root {
+:root {
   --base-red: #77080e;
   --dark: #1a1720;
   --dark-red: #470508;
@@ -7,7 +7,7 @@
   --gradient-dark: linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%);
   --shadow-light: rgba(255, 255, 255, 0.2);
   --shadow-dark: rgba(0, 0, 0, 0.3);
-} */
+}
 
 * {
   margin: 0;
@@ -71,12 +71,25 @@ button:active {
   display: flex !important;
   background-color: rgba(227, 211, 191, 0.1)!important;
   border: 1px solid var(--light)!important;
-  padding: 0.75rem !important;
+  padding: 0.2rem !important;
   border-radius: 8px !important;
   width: 100% !important;
 }
 .login-extension input{
   border: none !important;
+  background: none;
+}
+
+.eye-button{
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.eye-button:hover{
+    transform: none;
+  box-shadow:none;
 }
 input {
   background-color: rgba(227, 211, 191, 0.1);
@@ -169,6 +182,9 @@ input::placeholder {
 
 .form-group {
   margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .error-message {
@@ -184,7 +200,8 @@ input::placeholder {
 
 .btn-unlock {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: .5rem;
+  margin-bottom: 1rem;
 }
 
 /* Header */
