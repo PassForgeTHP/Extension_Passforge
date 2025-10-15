@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
 
   return (
     <div className="password-item">
