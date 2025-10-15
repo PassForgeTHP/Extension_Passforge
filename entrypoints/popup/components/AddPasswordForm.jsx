@@ -17,6 +17,18 @@ function AddPasswordForm({ onClose, onSubmit }) {
       [name]: value
     }));
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+    setFormData({
+      title: '',
+      domain: '',
+      username: '',
+      password: '',
+      notes: ''
+    });
+  };
   return (
     <div className="add-password-form" style={{
       position: 'fixed',
@@ -55,7 +67,7 @@ function AddPasswordForm({ onClose, onSubmit }) {
           </button>
         </div>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           <FormField
             label="Title"
             name="title"
@@ -96,6 +108,38 @@ function AddPasswordForm({ onClose, onSubmit }) {
             onChange={handleChange}
             placeholder="Add any additional notes (optional)"
           />
+
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: '1px solid #ddd',
+                color: '#666',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                padding: '8px 16px',
+                borderRadius: '4px'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                background: 'var(--medium-red)',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                padding: '8px 16px',
+                borderRadius: '4px'
+              }}
+            >
+              Add Password
+            </button>
+          </div>
         </form>
       </div>
     </div>
