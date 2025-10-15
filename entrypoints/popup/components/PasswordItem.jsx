@@ -76,6 +76,11 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId, onEd
               )}
             </div>
           )}
+          {password.created_at && (
+            <div className="password-timestamp" style={{ fontSize: '0.7rem', color: '#999', marginTop: '8px' }}>
+              Created: {new Date(password.created_at).toLocaleDateString()}
+            </div>
+          )}
         </div>
       </div>
       <div className="password-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
