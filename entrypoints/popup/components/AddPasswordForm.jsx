@@ -40,7 +40,12 @@ function AddPasswordForm({ onClose, onSubmit }) {
         </div>
 
         <form>
-          {/* Form fields will be added here */}
+          <FormField
+            label="Title"
+            name="title"
+            placeholder="e.g., GitHub Account"
+            required
+          />
         </form>
       </div>
     </div>
