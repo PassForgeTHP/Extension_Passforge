@@ -61,11 +61,15 @@ const useVaultStore = create((set, get) => ({
    */
   unlock: async (masterPassword) => {
     try {
+      console.log('[VaultStore] Starting unlock...')
+
       // Get vault from IndexedDB
       const storedVault = await vaultOperations.get()
+      console.log('[VaultStore] Stored vault:', storedVault ? 'EXISTS' : 'NULL (first time)')
 
       // Handle first-time unlock (no vault exists yet)
       if (!storedVault) {
+        console.log('[VaultStore] Creating new vault...')
         // Generate new salt for this user
         const newSalt = generateSalt()
 
@@ -93,6 +97,7 @@ const useVaultStore = create((set, get) => ({
           version: '1.0',
           updatedAt: new Date().toISOString()
         })
+        console.log('[VaultStore] ✅ New vault saved to IndexedDB')
 
         // Set state for unlocked empty vault
         set({
@@ -103,12 +108,15 @@ const useVaultStore = create((set, get) => ({
           iv: iv
         })
 
+        console.log('[VaultStore] ✅ Vault created and unlocked successfully')
         return { success: true, message: 'Vault created and unlocked' }
       }
 
       // Decrypt existing vault
+      console.log('[VaultStore] Decrypting existing vault...')
       // Derive key from master password and stored salt
       const key = await deriveKey(masterPassword, storedVault.salt)
+      console.log('[VaultStore] Key derived, attempting decryption...')
 
       // Decrypt vault using stored IV
       const decryptedJSON = await decryptData(
@@ -119,6 +127,7 @@ const useVaultStore = create((set, get) => ({
 
       // Parse decrypted JSON
       const vaultData = JSON.parse(decryptedJSON)
+      console.log('[VaultStore] ✅ Vault decrypted, loading passwords:', vaultData.passwords?.length || 0)
 
       // Load passwords into RAM
       set({
@@ -129,9 +138,11 @@ const useVaultStore = create((set, get) => ({
         iv: storedVault.iv
       })
 
+      console.log('[VaultStore] ✅ Vault unlocked successfully')
       return { success: true, message: 'Vault unlocked successfully' }
     } catch (error) {
-      console.error('Unlock failed:', error)
+      console.error('[VaultStore] ❌ Unlock failed:', error)
+      console.error('[VaultStore] ❌ Error details:', error.message, error.name)
       return { success: false, error: error.message }
     }
   },
