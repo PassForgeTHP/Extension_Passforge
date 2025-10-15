@@ -61,7 +61,7 @@ function App() {
       )}
 
       <div className="footer">
-        <button className="btn-add">+ Add Password</button>
+        <button className="btn-add" onClick={() => setShowAddForm(true)}>+ Add Password</button>
       </div>
     </div>
   );
