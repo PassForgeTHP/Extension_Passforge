@@ -7,24 +7,12 @@ import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
 function App() {
-  const [isLocked, setIsLocked] = useState(true);
-
-  // Mock data for testing
-  const [passwords] = useState([
-    { id: 1, name: 'GitHub', username: 'user@example.com', password: 'pass123', domain: 'github.com' },
-    { id: 2, name: 'Gmail', username: 'myemail@gmail.com', password: 'securepass', domain: 'gmail.com' },
-    { id: 3, name: 'Twitter', username: '@myhandle', password: 'twitterpass', domain: 'twitter.com' },
-  ]);
+  const { isLocked, passwords, deletePassword, addPassword } = useVaultStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
-  const handleUnlock = () => {
-    setIsLocked(false);
-  };
-
   const handleLock = () => {
-    setIsLocked(true);
     setSearchQuery('');
   };
 
@@ -43,7 +31,7 @@ function App() {
   if (isLocked) {
     return (
       <div className="app">
-        <LoginView onUnlock={handleUnlock} />
+        <LoginView />
       </div>
     );
   }
