@@ -28,37 +28,28 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId, onEd
           </div>
           <div className="password-field">
             <span className="password-label">Password:</span>
-            <span className="password-value">
+            <span
+              className="password-value clickable"
+              onClick={onCopyPassword}
+              title="Click to copy password"
+              style={{ cursor: 'pointer' }}
+            >
               {copiedId === `${password.id}-pass` ? 'Copied!' : (showPassword ? password.password : '••••••••')}
             </span>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--medium-red)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  padding: '2px 6px'
-                }}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
-              <button
-                onClick={onCopyPassword}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--medium-red)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  padding: '2px 6px'
-                }}
-              >
-                Copy
-              </button>
-            </div>
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--medium-red)',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                padding: '2px 6px',
+                marginLeft: '4px'
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
           </div>
           {password.notes && (
             <div className="password-field">
