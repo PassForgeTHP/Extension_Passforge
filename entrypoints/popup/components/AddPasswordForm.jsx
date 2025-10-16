@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FormField from './FormField';
-import { generatePassword } from '../../../services/passwordGenerator';
+import { generatePassword, calculatePasswordStrength } from '../../../services/passwordGenerator';
 
 function AddPasswordForm({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -20,6 +20,12 @@ function AddPasswordForm({ onClose, onSubmit }) {
     numbers: true,
     symbols: true
   });
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, level: 'empty', percentage: 0 });
+
+  useEffect(() => {
+    const strength = calculatePasswordStrength(formData.password);
+    setPasswordStrength(strength);
+  }, [formData.password]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -134,6 +140,33 @@ function AddPasswordForm({ onClose, onSubmit }) {
             placeholder="Enter password"
             required
           />
+          {formData.password && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                height: '4px',
+                background: '#e0e0e0',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginBottom: '4px'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${passwordStrength.percentage}%`,
+                  background: passwordStrength.level === 'weak' ? '#e74c3c' :
+                             passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60',
+                  transition: 'width 0.3s ease, background 0.3s ease'
+                }} />
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: passwordStrength.level === 'weak' ? '#e74c3c' :
+                       passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60'
+              }}>
+                {passwordStrength.level === 'weak' ? 'Weak password' :
+                 passwordStrength.level === 'medium' ? 'Medium password' : 'Strong password'}
+              </div>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setShowGenerator(!showGenerator)}
