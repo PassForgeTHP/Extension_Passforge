@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import LoginView from './components/LoginView';
 import Header from './components/Header';
-import Sidebar from './components/Sidebar';
+import BurgerMenu from './components/BurgerMenu';
 import SearchBar from './components/SearchBar';
 import PasswordListCompact from './components/PasswordListCompact';
 import PasswordDetails from './components/PasswordDetails';
@@ -28,7 +28,7 @@ function App() {
     { id: 'shared', name: 'Shared', color: '#77080e', icon: '👥' }
   ];
 
-  const handleLock = () => {
+  const handleLogout = () => {
     lock();
   };
 
@@ -67,15 +67,16 @@ function App() {
 
   return (
     <div className="app">
-      <Header onLock={handleLock} itemCount={passwords.length} />
-
-      <div className="app-main-three-pane">
-        <Sidebar
+      <Header onAdd={() => setShowAddForm(true)} itemCount={passwords.length}>
+        <BurgerMenu
           vaults={vaults}
           activeVaultId={activeVaultId}
           onVaultChange={setActiveVaultId}
+          onLogout={handleLogout}
         />
+      </Header>
 
+      <div className="app-main-two-pane">
         <div className="middle-pane">
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
           <PasswordListCompact
@@ -125,17 +126,6 @@ function App() {
             }}
           />
         )}
-
-        <button
-          className="fab-add"
-          onClick={() => setShowAddForm(true)}
-          title="Add new password"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
       </div>
     </div>
   );
