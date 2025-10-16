@@ -225,14 +225,14 @@ input::placeholder {
 
 .password-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 1rem;
   margin-bottom: 0.5rem;
   background: rgba(227, 211, 191, 0.05);
   border: 1px solid rgba(227, 211, 191, 0.2);
   border-radius: 8px;
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .password-item:hover {
@@ -262,12 +262,17 @@ input::placeholder {
 
 .password-info {
   flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .password-name {
   font-weight: 600;
   color: var(--light);
   margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .password-field {
@@ -298,6 +303,10 @@ input::placeholder {
 .password-value {
   color: var(--light);
   font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 /* Footer */
