@@ -8,7 +8,7 @@ import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
 function App() {
-  const { isLocked, passwords, deletePassword, addPassword } = useVaultStore();
+  const { isLocked, passwords, deletePassword, addPassword, updatePassword } = useVaultStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -50,7 +50,16 @@ function App() {
         onCopyUsername={copyToClipboard}
         onCopyPassword={copyToClipboard}
         onDelete={deletePassword}
-        onEdit={(password) => console.log('Edit:', password)}
+        onEdit={(password) => {
+          const updatedData = {
+            name: password.name,
+            domain: password.domain,
+            username: password.username,
+            password: password.password,
+            notes: password.notes
+          };
+          updatePassword(password.id, updatedData);
+        }}
       />
 
       {showAddForm && (
