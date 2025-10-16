@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import FormField from './FormField';
+import { generatePassword } from '../../../services/passwordGenerator';
 
 function AddPasswordForm({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -11,6 +12,14 @@ function AddPasswordForm({ onClose, onSubmit }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [generatorOptions, setGeneratorOptions] = useState({
+    length: 16,
+    lowercase: true,
+    uppercase: true,
+    numbers: true,
+    symbols: true
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,6 +27,11 @@ function AddPasswordForm({ onClose, onSubmit }) {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword(generatorOptions);
+    setFormData(prev => ({ ...prev, password: newPassword }));
   };
 
   const handleSubmit = (e) => {
@@ -120,6 +134,23 @@ function AddPasswordForm({ onClose, onSubmit }) {
             placeholder="Enter password"
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowGenerator(!showGenerator)}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--medium-red)',
+              color: 'var(--medium-red)',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              marginBottom: '12px',
+              width: '100%'
+            }}
+          >
+            {showGenerator ? 'Hide Generator' : 'Generate Password'}
+          </button>
           <FormField
             label="Notes"
             type="textarea"
