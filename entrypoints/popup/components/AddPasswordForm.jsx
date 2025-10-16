@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react';
+import {
+  HiX,
+  HiKey,
+  HiRefresh,
+  HiChevronDown,
+  HiChevronUp,
+  HiPlus
+} from 'react-icons/hi';
 import FormField from './FormField';
 import { generatePassword, calculatePasswordStrength } from '../../../services/passwordGenerator';
 
@@ -70,40 +78,15 @@ function AddPasswordForm({ onClose, onSubmit }) {
     });
   };
   return (
-    <div className="add-password-form" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        width: '90%',
-        maxWidth: '400px',
-        maxHeight: '80vh',
-        overflow: 'auto'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Add Password</h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.5rem',
-              cursor: 'pointer',
-              color: '#666'
-            }}
-          >
-            ×
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title-wrapper">
+            <HiPlus className="modal-icon" />
+            <h2 className="modal-title">Add New Password</h2>
+          </div>
+          <button onClick={onClose} className="modal-close-btn" title="Close">
+            <HiX />
           </button>
         </div>
 
@@ -141,27 +124,14 @@ function AddPasswordForm({ onClose, onSubmit }) {
             required
           />
           {formData.password && (
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{
-                height: '4px',
-                background: '#e0e0e0',
-                borderRadius: '2px',
-                overflow: 'hidden',
-                marginBottom: '4px'
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${passwordStrength.percentage}%`,
-                  background: passwordStrength.level === 'weak' ? '#e74c3c' :
-                             passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60',
-                  transition: 'width 0.3s ease, background 0.3s ease'
-                }} />
+            <div className="password-strength">
+              <div className="strength-bar">
+                <div
+                  className={`strength-fill strength-${passwordStrength.level}`}
+                  style={{ width: `${passwordStrength.percentage}%` }}
+                />
               </div>
-              <div style={{
-                fontSize: '0.75rem',
-                color: passwordStrength.level === 'weak' ? '#e74c3c' :
-                       passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60'
-              }}>
+              <div className={`strength-label strength-${passwordStrength.level}`}>
                 {passwordStrength.level === 'weak' ? 'Weak password' :
                  passwordStrength.level === 'medium' ? 'Medium password' : 'Strong password'}
               </div>
@@ -170,31 +140,17 @@ function AddPasswordForm({ onClose, onSubmit }) {
           <button
             type="button"
             onClick={() => setShowGenerator(!showGenerator)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--medium-red)',
-              color: 'var(--medium-red)',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              marginBottom: '12px',
-              width: '100%'
-            }}
+            className="generator-toggle-btn"
           >
+            <HiKey />
             {showGenerator ? 'Hide Generator' : 'Generate Password'}
+            {showGenerator ? <HiChevronUp /> : <HiChevronDown />}
           </button>
 
           {showGenerator && (
-            <div style={{
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              padding: '12px',
-              marginBottom: '12px',
-              background: '#f9f9f9'
-            }}>
-              <div style={{ marginBottom: '8px' }}>
-                <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>
+            <div className="password-generator">
+              <div className="generator-option">
+                <label className="generator-label">
                   Length: {generatorOptions.length}
                 </label>
                 <input
@@ -203,58 +159,50 @@ function AddPasswordForm({ onClose, onSubmit }) {
                   max="32"
                   value={generatorOptions.length}
                   onChange={(e) => setGeneratorOptions(prev => ({ ...prev, length: parseInt(e.target.value) }))}
-                  style={{ width: '100%' }}
+                  className="generator-slider"
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div className="generator-checkboxes">
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={generatorOptions.lowercase}
                     onChange={(e) => setGeneratorOptions(prev => ({ ...prev, lowercase: e.target.checked }))}
                   />
-                  a-z
+                  <span>a-z</span>
                 </label>
-                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={generatorOptions.uppercase}
                     onChange={(e) => setGeneratorOptions(prev => ({ ...prev, uppercase: e.target.checked }))}
                   />
-                  A-Z
+                  <span>A-Z</span>
                 </label>
-                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={generatorOptions.numbers}
                     onChange={(e) => setGeneratorOptions(prev => ({ ...prev, numbers: e.target.checked }))}
                   />
-                  0-9
+                  <span>0-9</span>
                 </label>
-                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <label className="checkbox-label">
                   <input
                     type="checkbox"
                     checked={generatorOptions.symbols}
                     onChange={(e) => setGeneratorOptions(prev => ({ ...prev, symbols: e.target.checked }))}
                   />
-                  !@#$
+                  <span>!@#$</span>
                 </label>
               </div>
               <button
                 type="button"
                 onClick={handleGeneratePassword}
-                style={{
-                  background: 'var(--medium-red)',
-                  border: 'none',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  width: '100%'
-                }}
+                className="generate-btn"
               >
-                Generate
+                <HiRefresh />
+                Generate Password
               </button>
             </div>
           )}
@@ -269,47 +217,26 @@ function AddPasswordForm({ onClose, onSubmit }) {
           />
 
           {Object.keys(errors).length > 0 && (
-            <div style={{
-              padding: '8px 12px',
-              background: '#fee',
-              border: '1px solid #fcc',
-              borderRadius: '4px',
-              marginTop: '12px'
-            }}>
+            <div className="form-errors">
               {Object.values(errors).map((error, idx) => (
-                <div key={idx} style={{ color: '#c33', fontSize: '0.8rem' }}>{error}</div>
+                <div key={idx} className="form-error-item">{error}</div>
               ))}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+          <div className="modal-footer">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                background: 'transparent',
-                border: '1px solid #ddd',
-                color: '#666',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                padding: '8px 16px',
-                borderRadius: '4px'
-              }}
+              className="btn-cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
-              style={{
-                background: 'var(--medium-red)',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                padding: '8px 16px',
-                borderRadius: '4px'
-              }}
+              className="btn-submit"
             >
+              <HiPlus />
               Add Password
             </button>
           </div>
