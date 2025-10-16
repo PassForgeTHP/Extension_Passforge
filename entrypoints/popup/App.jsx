@@ -15,29 +15,38 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [activeView, setActiveView] = useState('all');
+  const [activeVaultId, setActiveVaultId] = useState('personal');
   const [selectedPassword, setSelectedPassword] = useState(null);
+
+  // Mock vaults - in real app, these would come from store
+  const vaults = [
+    { id: 'personal', name: 'Personal', color: '#af0024', icon: '🔐' },
+    { id: 'work', name: 'Work', color: '#470508', icon: '💼' },
+    { id: 'shared', name: 'Shared', color: '#77080e', icon: '👥' }
+  ];
 
   const handleLock = () => {
     setSearchQuery('');
   };
 
-  // Filter by view
-  let viewFilteredPasswords = passwords;
-  if (activeView === 'passwords') {
-    viewFilteredPasswords = passwords.filter(pwd => pwd.password);
-  } else if (activeView === 'notes') {
-    viewFilteredPasswords = passwords.filter(pwd => pwd.notes);
-  } else if (activeView === 'favorites') {
-    viewFilteredPasswords = passwords.filter(pwd => pwd.favorite);
-  }
+  // Filter by vault - for now show all since passwords don't have vault_id yet
+  let vaultFilteredPasswords = passwords;
+  // TODO: Filter by vault when vault system is fully implemented
+  // vaultFilteredPasswords = passwords.filter(pwd => pwd.vault_id === activeVaultId);
 
   // Filter by search query
-  const filteredPasswords = viewFilteredPasswords.filter(pwd =>
+  const filteredPasswords = vaultFilteredPasswords.filter(pwd =>
     pwd.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     pwd.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     pwd.domain?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Sort: pinned items first, then by date
+  const sortedPasswords = [...filteredPasswords].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
 
   const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -58,12 +67,16 @@ function App() {
       <Header onLock={handleLock} itemCount={passwords.length} />
 
       <div className="app-main-three-pane">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
+        <Sidebar
+          vaults={vaults}
+          activeVaultId={activeVaultId}
+          onVaultChange={setActiveVaultId}
+        />
 
         <div className="middle-pane">
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
           <PasswordListCompact
-            passwords={filteredPasswords}
+            passwords={sortedPasswords}
             selectedId={selectedPassword?.id}
             onSelect={setSelectedPassword}
           />
