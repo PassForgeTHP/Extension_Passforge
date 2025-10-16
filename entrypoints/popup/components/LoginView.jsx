@@ -1,32 +1,31 @@
 import { useState } from 'react';
+import useVaultStore from '../../../services/vaultStore';
 
-function LoginView({ onUnlock }) {
+function LoginView() {
+  const unlock = useVaultStore(state => state.unlock);
+
   const [masterPassword, setMasterPassword] = useState('');
-  const [email, setEmail] = useState("");
-  const [showPassword, setShowPassword]=useState(false)
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-try {
-    const res = await fetch("http://localhost:3000/users/sign_in", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user: { email:email, password: masterPassword} })
-    });
-      if (!res.ok) {
-      throw new Error("Login failed");
-    }
-    const data = await res.json()
-    const token = res.headers.get("Authorization")?.split(" ")[1];
-    onUnlock(data.user, token)
-          onUnlock();
-      setError('');
-} catch (error) {
-  setError(error.message)
-}
-   
 
+    if (!masterPassword.trim()) {
+      setError('Please enter your master password');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    const result = await unlock(masterPassword);
+
+    if (!result.success) {
+      setError(result.error || 'Invalid master password');
+      setLoading(false);
+    }
+    // If success, isLocked becomes false automatically
   };
 
   return (
@@ -39,30 +38,19 @@ try {
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <div className='login-extension'>
           <input
-            type={showPassword? 'text': 'password'}
+            type="password"
             placeholder="Master password"
             value={masterPassword}
             onChange={(e) => setMasterPassword(e.target.value)}
             autoFocus
           />
-          <button
-          type='button'
-          onClick={()=>setShowPassword(!showPassword)}
-          className='eye-button'
-          aria-label="Display password"
-          >
-            {showPassword ? "🙈" : "👁️"}
-          </button>
-        </div>
         </div>
 
         {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" className="btn-unlock">
-          Unlock
+        <button type="submit" className="btn-unlock" disabled={loading}>
+          {loading ? 'Unlocking...' : 'Unlock'}
         </button>
       </form>
     </div>

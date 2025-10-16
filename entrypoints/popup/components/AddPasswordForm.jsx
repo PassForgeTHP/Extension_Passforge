@@ -1,0 +1,322 @@
+import { useState, useEffect } from 'react';
+import FormField from './FormField';
+import { generatePassword, calculatePasswordStrength } from '../../../services/passwordGenerator';
+
+function AddPasswordForm({ onClose, onSubmit }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    domain: '',
+    username: '',
+    password: '',
+    notes: ''
+  });
+
+  const [errors, setErrors] = useState({});
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [generatorOptions, setGeneratorOptions] = useState({
+    length: 16,
+    lowercase: true,
+    uppercase: true,
+    numbers: true,
+    symbols: true
+  });
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, level: 'empty', percentage: 0 });
+
+  useEffect(() => {
+    const strength = calculatePasswordStrength(formData.password);
+    setPasswordStrength(strength);
+  }, [formData.password]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generatePassword(generatorOptions);
+    setFormData(prev => ({ ...prev, password: newPassword }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const newErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    onSubmit(formData);
+    setFormData({
+      name: '',
+      domain: '',
+      username: '',
+      password: '',
+      notes: ''
+    });
+  };
+  return (
+    <div className="add-password-form" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        background: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        width: '90%',
+        maxWidth: '400px',
+        maxHeight: '80vh',
+        overflow: 'auto'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Add Password</h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+              color: '#666'
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <FormField
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="e.g., GitHub Account"
+            required
+          />
+          <FormField
+            label="Domain"
+            name="domain"
+            value={formData.domain}
+            onChange={handleChange}
+            placeholder="e.g., github.com"
+          />
+          <FormField
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Enter username or email"
+            required
+          />
+          <FormField
+            label="Password"
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter password"
+            required
+          />
+          {formData.password && (
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                height: '4px',
+                background: '#e0e0e0',
+                borderRadius: '2px',
+                overflow: 'hidden',
+                marginBottom: '4px'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${passwordStrength.percentage}%`,
+                  background: passwordStrength.level === 'weak' ? '#e74c3c' :
+                             passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60',
+                  transition: 'width 0.3s ease, background 0.3s ease'
+                }} />
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: passwordStrength.level === 'weak' ? '#e74c3c' :
+                       passwordStrength.level === 'medium' ? '#f39c12' : '#27ae60'
+              }}>
+                {passwordStrength.level === 'weak' ? 'Weak password' :
+                 passwordStrength.level === 'medium' ? 'Medium password' : 'Strong password'}
+              </div>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowGenerator(!showGenerator)}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--medium-red)',
+              color: 'var(--medium-red)',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              marginBottom: '12px',
+              width: '100%'
+            }}
+          >
+            {showGenerator ? 'Hide Generator' : 'Generate Password'}
+          </button>
+
+          {showGenerator && (
+            <div style={{
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              padding: '12px',
+              marginBottom: '12px',
+              background: '#f9f9f9'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>
+                  Length: {generatorOptions.length}
+                </label>
+                <input
+                  type="range"
+                  min="8"
+                  max="32"
+                  value={generatorOptions.length}
+                  onChange={(e) => setGeneratorOptions(prev => ({ ...prev, length: parseInt(e.target.value) }))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.lowercase}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, lowercase: e.target.checked }))}
+                  />
+                  a-z
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.uppercase}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, uppercase: e.target.checked }))}
+                  />
+                  A-Z
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.numbers}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, numbers: e.target.checked }))}
+                  />
+                  0-9
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.symbols}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, symbols: e.target.checked }))}
+                  />
+                  !@#$
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                style={{
+                  background: 'var(--medium-red)',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  width: '100%'
+                }}
+              >
+                Generate
+              </button>
+            </div>
+          )}
+
+          <FormField
+            label="Notes"
+            type="textarea"
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Add any additional notes (optional)"
+          />
+
+          {Object.keys(errors).length > 0 && (
+            <div style={{
+              padding: '8px 12px',
+              background: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: '4px',
+              marginTop: '12px'
+            }}>
+              {Object.values(errors).map((error, idx) => (
+                <div key={idx} style={{ color: '#c33', fontSize: '0.8rem' }}>{error}</div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: '1px solid #ddd',
+                color: '#666',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                padding: '8px 16px',
+                borderRadius: '4px'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                background: 'var(--medium-red)',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                padding: '8px 16px',
+                borderRadius: '4px'
+              }}
+            >
+              Add Password
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default AddPasswordForm;
