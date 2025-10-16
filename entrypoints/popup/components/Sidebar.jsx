@@ -15,6 +15,7 @@ function Sidebar({ vaults = [], activeVaultId, onVaultChange }) {
         <button
           className="vault-add-btn"
           title="Create vault"
+          onClick={() => console.log('Create vault - feature coming soon')}
         >
           <HiPlus />
         </button>
@@ -42,6 +43,7 @@ function Sidebar({ vaults = [], activeVaultId, onVaultChange }) {
         <button
           className="vault-item trash"
           title="Trash"
+          onClick={() => console.log('Trash - feature coming soon')}
         >
           <div className="vault-icon-wrapper trash-icon">
             <HiTrash />

@@ -6,6 +6,7 @@ import SearchBar from './components/SearchBar';
 import PasswordListCompact from './components/PasswordListCompact';
 import PasswordDetails from './components/PasswordDetails';
 import AddPasswordForm from './components/AddPasswordForm';
+import EditPasswordForm from './components/EditPasswordForm';
 import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
@@ -15,6 +16,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(null);
   const [activeVaultId, setActiveVaultId] = useState('personal');
   const [selectedPassword, setSelectedPassword] = useState(null);
 
@@ -89,14 +92,8 @@ function App() {
           onCopyUsername={copyToClipboard}
           onCopyPassword={copyToClipboard}
           onEdit={(password) => {
-            const updatedData = {
-              name: password.name,
-              domain: password.domain,
-              username: password.username,
-              password: password.password,
-              notes: password.notes
-            };
-            updatePassword(password.id, updatedData);
+            setEditingPassword(password);
+            setShowEditForm(true);
           }}
           onDelete={(id) => {
             deletePassword(id);
@@ -110,6 +107,21 @@ function App() {
             onSubmit={(data) => {
               addPassword(data);
               setShowAddForm(false);
+            }}
+          />
+        )}
+
+        {showEditForm && editingPassword && (
+          <EditPasswordForm
+            password={editingPassword}
+            onClose={() => {
+              setShowEditForm(false);
+              setEditingPassword(null);
+            }}
+            onSubmit={(data) => {
+              updatePassword(editingPassword.id, data);
+              setShowEditForm(false);
+              setEditingPassword(null);
             }}
           />
         )}
