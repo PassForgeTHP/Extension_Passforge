@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HiShieldCheck, HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import useVaultStore from '../../../services/vaultStore';
 
 function LoginView() {
@@ -7,6 +8,7 @@ function LoginView() {
   const [masterPassword, setMasterPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,32 +27,59 @@ function LoginView() {
       setError(result.error || 'Invalid master password');
       setLoading(false);
     }
-    // If success, isLocked becomes false automatically
   };
 
   return (
     <div className="login-container">
       <div className="login-header">
-        <div className="logo">PF</div>
+        <div className="logo-large">
+          <HiShieldCheck className="logo-icon-large" />
+        </div>
         <h1>PassForge</h1>
-        <p>Enter your master password to unlock</p>
+        <p>Enter your master password to unlock your vault</p>
       </div>
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <input
-            type="password"
-            placeholder="Master password"
-            value={masterPassword}
-            onChange={(e) => setMasterPassword(e.target.value)}
-            autoFocus
-          />
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Master password"
+              value={masterPassword}
+              onChange={(e) => setMasterPassword(e.target.value)}
+              autoFocus
+              className="master-password-input"
+            />
+            <button
+              type="button"
+              className="toggle-password-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? <HiEyeOff /> : <HiEye />}
+            </button>
+          </div>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="error-message shake">
+            <HiLockClosed className="error-icon" />
+            {error}
+          </div>
+        )}
 
         <button type="submit" className="btn-unlock" disabled={loading}>
-          {loading ? 'Unlocking...' : 'Unlock'}
+          {loading ? (
+            <>
+              <span className="spinner"></span>
+              Unlocking...
+            </>
+          ) : (
+            <>
+              <HiLockClosed />
+              Unlock Vault
+            </>
+          )}
         </button>
       </form>
     </div>
