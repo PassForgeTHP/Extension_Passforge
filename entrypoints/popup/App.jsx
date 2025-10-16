@@ -19,9 +19,9 @@ function App() {
   };
 
   const filteredPasswords = passwords.filter(pwd =>
-    pwd.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pwd.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pwd.domain.toLowerCase().includes(searchQuery.toLowerCase())
+    pwd.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pwd.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pwd.domain?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const copyToClipboard = (text, id) => {

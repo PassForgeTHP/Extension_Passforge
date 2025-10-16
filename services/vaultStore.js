@@ -212,9 +212,9 @@ const useVaultStore = create((set, get) => ({
 
     const lowerQuery = query.toLowerCase()
     return passwords.filter(pwd =>
-      pwd.name.toLowerCase().includes(lowerQuery) ||
-      pwd.domain.toLowerCase().includes(lowerQuery) ||
-      pwd.username.toLowerCase().includes(lowerQuery)
+      pwd.name?.toLowerCase().includes(lowerQuery) ||
+      pwd.domain?.toLowerCase().includes(lowerQuery) ||
+      pwd.username?.toLowerCase().includes(lowerQuery)
     )
   }
 }))

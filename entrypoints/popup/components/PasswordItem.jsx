@@ -7,9 +7,9 @@ function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId, onEd
   return (
     <div className="password-item">
       <div className="password-item-header">
-        <div className="password-icon">{password.name[0]}</div>
+        <div className="password-icon">{password.name?.[0] || '?'}</div>
         <div className="password-info">
-          <div className="password-name">{password.name}</div>
+          <div className="password-name">{password.name || 'Untitled'}</div>
           {password.domain && (
             <div className="password-field">
               <span className="password-label">Domain:</span>
