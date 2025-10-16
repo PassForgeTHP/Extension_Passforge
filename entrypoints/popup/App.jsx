@@ -11,7 +11,7 @@ import useVaultStore from '../../services/vaultStore';
 import './style.css';
 
 function App() {
-  const { isLocked, passwords, deletePassword, addPassword, updatePassword } = useVaultStore();
+  const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -29,7 +29,7 @@ function App() {
   ];
 
   const handleLock = () => {
-    setSearchQuery('');
+    lock();
   };
 
   // Filter by vault - for now show all since passwords don't have vault_id yet
