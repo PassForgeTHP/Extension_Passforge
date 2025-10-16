@@ -151,6 +151,81 @@ function AddPasswordForm({ onClose, onSubmit }) {
           >
             {showGenerator ? 'Hide Generator' : 'Generate Password'}
           </button>
+
+          {showGenerator && (
+            <div style={{
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              padding: '12px',
+              marginBottom: '12px',
+              background: '#f9f9f9'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>
+                  Length: {generatorOptions.length}
+                </label>
+                <input
+                  type="range"
+                  min="8"
+                  max="32"
+                  value={generatorOptions.length}
+                  onChange={(e) => setGeneratorOptions(prev => ({ ...prev, length: parseInt(e.target.value) }))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.lowercase}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, lowercase: e.target.checked }))}
+                  />
+                  a-z
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.uppercase}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, uppercase: e.target.checked }))}
+                  />
+                  A-Z
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.numbers}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, numbers: e.target.checked }))}
+                  />
+                  0-9
+                </label>
+                <label style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    checked={generatorOptions.symbols}
+                    onChange={(e) => setGeneratorOptions(prev => ({ ...prev, symbols: e.target.checked }))}
+                  />
+                  !@#$
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                style={{
+                  background: 'var(--medium-red)',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  width: '100%'
+                }}
+              >
+                Generate
+              </button>
+            </div>
+          )}
+
           <FormField
             label="Notes"
             type="textarea"
