@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import LoginView from './components/LoginView';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import SearchBar from './components/SearchBar';
 import PasswordList from './components/PasswordList';
 import AddPasswordForm from './components/AddPasswordForm';
@@ -13,12 +14,24 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [activeView, setActiveView] = useState('all');
 
   const handleLock = () => {
     setSearchQuery('');
   };
 
-  const filteredPasswords = passwords.filter(pwd =>
+  // Filter by view
+  let viewFilteredPasswords = passwords;
+  if (activeView === 'passwords') {
+    viewFilteredPasswords = passwords.filter(pwd => pwd.password);
+  } else if (activeView === 'notes') {
+    viewFilteredPasswords = passwords.filter(pwd => pwd.notes);
+  } else if (activeView === 'favorites') {
+    viewFilteredPasswords = passwords.filter(pwd => pwd.favorite);
+  }
+
+  // Filter by search query
+  const filteredPasswords = viewFilteredPasswords.filter(pwd =>
     pwd.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     pwd.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     pwd.domain?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -40,40 +53,46 @@ function App() {
 
   return (
     <div className="app">
-      <Header onLock={handleLock} />
+      <Header onLock={handleLock} itemCount={passwords.length} />
 
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <div className="app-main">
+        <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
-      <PasswordList
-        passwords={filteredPasswords}
-        copiedId={copiedId}
-        onCopyUsername={copyToClipboard}
-        onCopyPassword={copyToClipboard}
-        onDelete={deletePassword}
-        onEdit={(password) => {
-          const updatedData = {
-            name: password.name,
-            domain: password.domain,
-            username: password.username,
-            password: password.password,
-            notes: password.notes
-          };
-          updatePassword(password.id, updatedData);
-        }}
-      />
+        <div className="content-area">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-      {showAddForm && (
-        <AddPasswordForm
-          onClose={() => setShowAddForm(false)}
-          onSubmit={(data) => {
-            addPassword(data);
-            setShowAddForm(false);
-          }}
-        />
-      )}
+          <PasswordList
+            passwords={filteredPasswords}
+            copiedId={copiedId}
+            onCopyUsername={copyToClipboard}
+            onCopyPassword={copyToClipboard}
+            onDelete={deletePassword}
+            onEdit={(password) => {
+              const updatedData = {
+                name: password.name,
+                domain: password.domain,
+                username: password.username,
+                password: password.password,
+                notes: password.notes
+              };
+              updatePassword(password.id, updatedData);
+            }}
+          />
 
-      <div className="footer">
-        <button className="btn-add" onClick={() => setShowAddForm(true)}>+ Add Password</button>
+          {showAddForm && (
+            <AddPasswordForm
+              onClose={() => setShowAddForm(false)}
+              onSubmit={(data) => {
+                addPassword(data);
+                setShowAddForm(false);
+              }}
+            />
+          )}
+
+          <div className="footer">
+            <button className="btn-add" onClick={() => setShowAddForm(true)}>+ Add Password</button>
+          </div>
+        </div>
       </div>
     </div>
   );
