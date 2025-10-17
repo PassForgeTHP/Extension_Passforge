@@ -1,3 +1,14 @@
+/**
+ * Content script for PassForge extension
+ * Runs on all web pages to detect login forms and interact with them
+ * - Detects password and username fields
+ * - Communicates with background script to get/save passwords
+ * - Adds visual indicators to detected fields
+ */
+
+import { sendMessage } from '../services/messageService.js';
+import { MESSAGE_TYPES } from '../services/messageTypes.js';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
@@ -63,8 +74,29 @@ export default defineContentScript({
       field.parentElement?.appendChild(icon);
     }
 
+    // Request passwords for current domain from background script
+    async function requestPasswordsForDomain() {
+      try {
+        // Send message to background script requesting passwords for this domain
+        const response = await sendMessage(MESSAGE_TYPES.GET_PASSWORD, {
+          domain: currentDomain
+        });
+
+        if (response.success) {
+          console.log(`Found ${response.count} password(s) for ${currentDomain}`);
+          return response.passwords;
+        } else {
+          console.log('Could not retrieve passwords:', response.error);
+          return [];
+        }
+      } catch (error) {
+        console.error('Error requesting passwords:', error);
+        return [];
+      }
+    }
+
     // Detect login forms
-    function detectLoginForms() {
+    async function detectLoginForms() {
       const passwordFields = detectPasswordFields();
       const usernameFields = detectUsernameFields();
 
@@ -91,6 +123,12 @@ export default defineContentScript({
       });
 
       console.log(`Detected ${loginForms.length} login form(s)`);
+
+      // If forms were detected, request saved passwords from background
+      if (loginForms.length > 0) {
+        await requestPasswordsForDomain();
+      }
+
       return loginForms;
     }
 
