@@ -1,0 +1,67 @@
+/* Search Bar - Password Search Component */
+
+.search-bar {
+  padding: 1rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  width: 18px;
+  height: 18px;
+  color: rgba(227, 211, 191, 0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.75rem !important;
+  padding-right: 2.5rem !important;
+  background-color: rgba(227, 211, 191, 0.05);
+  border: 1px solid rgba(227, 211, 191, 0.3);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  background-color: rgba(227, 211, 191, 0.08);
+  border-color: var(--medium-red);
+  box-shadow: 0 0 0 3px rgba(175, 0, 36, 0.15);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: rgba(227, 211, 191, 0.1);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.clear-search-btn:hover {
+  background: var(--medium-red);
+  transform: rotate(90deg);
+}
+
+.clear-search-btn:active {
+  transform: rotate(90deg) scale(0.9);
+}
+
+.clear-search-btn svg {
+  width: 14px;
+  height: 14px;
+}

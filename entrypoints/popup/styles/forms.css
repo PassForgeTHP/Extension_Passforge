@@ -1,0 +1,48 @@
+/* Forms - Input Fields and Form Elements */
+
+.login-extension{
+  display: flex !important;
+  background-color: rgba(227, 211, 191, 0.1)!important;
+  border: 1px solid var(--light)!important;
+  padding: 0.2rem !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+}
+
+.login-extension input{
+  border: none !important;
+  background: none;
+}
+
+.eye-button{
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.eye-button:hover{
+    transform: none;
+  box-shadow:none;
+}
+
+input {
+  background-color: rgba(227, 211, 191, 0.1);
+  border: 1px solid var(--light);
+  color: var(--light);
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--medium-red);
+  box-shadow: 0 0 0 2px rgba(175, 0, 36, 0.3);
+}
+
+input::placeholder {
+  color: rgba(227, 211, 191, 0.5);
+}
