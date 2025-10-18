@@ -8,7 +8,7 @@
 
 import { sendMessage } from '../services/messageService.js';
 import { MESSAGE_TYPES } from '../services/messageTypes.js';
-import { detectLoginForms, initFormDetection } from '../services/formDetection.js';
+import { detectLoginForms, injectPassForgeIcon } from '../services/formDetection.js';
 import { addVisualIndicator } from '../services/fieldIndicators.js';
 import { initKeyboardShortcuts } from '../services/keyboardShortcuts.js';
 import { autoFillForm, findMatchingCredential, extractDomain } from '../services/autoFillService.js';
@@ -25,6 +25,7 @@ export default defineContentScript({
 
     // Store detected forms for auto-fill
     let detectedForms = [];
+    let isDetecting = false;
 
     // Request passwords for current domain from background script
     async function requestPasswordsForDomain() {
@@ -49,48 +50,72 @@ export default defineContentScript({
 
     // Detect and handle login forms on the page
     async function handleLoginForms() {
-      // Create click handler for PassForge icons
-      const handleIconClick = async (icon, field, fieldType) => {
-        // Find the form containing this field
-        const formData = detectedForms.find(form =>
-          form.usernameField === field || form.passwordField === field
-        );
-
-        if (!formData) {
-          console.log('[IconClick] Could not find form for field');
-          return;
-        }
-
-        // Show credential menu
-        await showCredentialMenu(icon, currentDomain, (selectedCredential) => {
-          // Auto-fill the form with selected credential
-          autoFillForm(
-            selectedCredential,
-            formData.usernameField,
-            formData.passwordField
-          );
-          console.log('[IconClick] Form filled with selected credential');
-        });
-      };
-
-      // Use the imported initFormDetection function to inject icons with click handler
-      const loginForms = initFormDetection(currentDomain, handleIconClick);
-
-      // Also add visual indicators
-      loginForms.forEach(({ usernameField, passwordField }) => {
-        addVisualIndicator(usernameField);
-        addVisualIndicator(passwordField);
-      });
-
-      // Store detected forms for auto-fill
-      detectedForms = loginForms;
-
-      // If forms were detected, request saved passwords from background
-      if (loginForms.length > 0) {
-        await requestPasswordsForDomain();
+      // Prevent concurrent detection to avoid infinite loops
+      if (isDetecting) {
+        return detectedForms;
       }
 
-      return loginForms;
+      isDetecting = true;
+
+      try {
+        // Detect login forms first
+        const loginForms = detectLoginForms(currentDomain);
+
+        // Store detected forms before setting up click handlers (needed for closure)
+        detectedForms = loginForms;
+
+        // Create click handler for PassForge icons
+        const handleIconClick = async (icon, field, fieldType) => {
+          // Find the form containing this field
+          const formData = detectedForms.find(form =>
+            form.usernameField === field || form.passwordField === field
+          );
+
+          if (!formData) {
+            console.log('[IconClick] Could not find form for field');
+            return;
+          }
+
+          // Show credential menu
+          await showCredentialMenu(icon, currentDomain, (selectedCredential) => {
+            // Auto-fill the form with selected credential
+            autoFillForm(
+              selectedCredential,
+              formData.usernameField,
+              formData.passwordField
+            );
+            console.log('[IconClick] Form filled with selected credential');
+          });
+        };
+
+        // Inject icons for new forms only
+        loginForms.forEach(({ usernameField, passwordField }) => {
+          // Check if icon already exists to prevent re-injection
+          const usernameHasIcon = usernameField?.parentElement?.querySelector('.passforge-icon') ||
+                                   document.querySelector(`.passforge-icon[data-field-id="${usernameField?.id}"]`);
+          const passwordHasIcon = passwordField?.parentElement?.querySelector('.passforge-icon') ||
+                                   document.querySelector(`.passforge-icon[data-field-id="${passwordField?.id}"]`);
+
+          if (usernameField && !usernameHasIcon) {
+            injectPassForgeIcon(usernameField, 'username', handleIconClick);
+            addVisualIndicator(usernameField);
+          }
+
+          if (passwordField && !passwordHasIcon) {
+            injectPassForgeIcon(passwordField, 'password', handleIconClick);
+            addVisualIndicator(passwordField);
+          }
+        });
+
+        // If forms were detected, request saved passwords from background
+        if (loginForms.length > 0) {
+          await requestPasswordsForDomain();
+        }
+
+        return loginForms;
+      } finally {
+        isDetecting = false;
+      }
     }
 
     // Handle auto-fill when keyboard shortcut is triggered
@@ -150,9 +175,27 @@ export default defineContentScript({
       handleLoginForms();
     }
 
-    // Watch for dynamic forms (SPA apps)
-    const observer = new MutationObserver(() => {
-      handleLoginForms();
+    // Watch for dynamic forms (SPA apps) with debounce
+    let mutationTimeout;
+    const observer = new MutationObserver((mutations) => {
+      // Ignore mutations caused by PassForge itself
+      const hasPassForgeChanges = mutations.some(mutation =>
+        Array.from(mutation.addedNodes).some(node =>
+          node.classList?.contains('passforge-icon') ||
+          node.classList?.contains('passforge-credential-menu') ||
+          node.classList?.contains('passforge-indicator')
+        )
+      );
+
+      if (hasPassForgeChanges) {
+        return; // Don't re-detect if we just injected our own elements
+      }
+
+      // Debounce to avoid excessive re-detection
+      clearTimeout(mutationTimeout);
+      mutationTimeout = setTimeout(() => {
+        handleLoginForms();
+      }, 500);
     });
 
     observer.observe(document.body, {
