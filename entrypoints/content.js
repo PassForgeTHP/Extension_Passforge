@@ -12,6 +12,7 @@ import { detectLoginForms, initFormDetection } from '../services/formDetection.j
 import { addVisualIndicator } from '../services/fieldIndicators.js';
 import { initKeyboardShortcuts } from '../services/keyboardShortcuts.js';
 import { autoFillForm, findMatchingCredential, extractDomain } from '../services/autoFillService.js';
+import { showCredentialMenu } from '../services/credentialMenu.js';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -48,8 +49,32 @@ export default defineContentScript({
 
     // Detect and handle login forms on the page
     async function handleLoginForms() {
-      // Use the imported initFormDetection function to inject icons
-      const loginForms = initFormDetection(currentDomain);
+      // Create click handler for PassForge icons
+      const handleIconClick = async (icon, field, fieldType) => {
+        // Find the form containing this field
+        const formData = detectedForms.find(form =>
+          form.usernameField === field || form.passwordField === field
+        );
+
+        if (!formData) {
+          console.log('[IconClick] Could not find form for field');
+          return;
+        }
+
+        // Show credential menu
+        await showCredentialMenu(icon, currentDomain, (selectedCredential) => {
+          // Auto-fill the form with selected credential
+          autoFillForm(
+            selectedCredential,
+            formData.usernameField,
+            formData.passwordField
+          );
+          console.log('[IconClick] Form filled with selected credential');
+        });
+      };
+
+      // Use the imported initFormDetection function to inject icons with click handler
+      const loginForms = initFormDetection(currentDomain, handleIconClick);
 
       // Also add visual indicators
       loginForms.forEach(({ usernameField, passwordField }) => {
