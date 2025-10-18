@@ -107,8 +107,9 @@ export function detectLoginForms(currentDomain) {
  * Injects PassForge icon next to an input field
  * @param {HTMLInputElement} field - The input field
  * @param {string} fieldType - Type of field ('username' or 'password')
+ * @param {Function} onIconClick - Optional callback when icon is clicked
  */
-export function injectPassForgeIcon(field, fieldType) {
+export function injectPassForgeIcon(field, fieldType, onIconClick) {
   if (!field) return;
 
   // Check if icon already exists
@@ -174,6 +175,15 @@ export function injectPassForgeIcon(field, fieldType) {
     icon.style.opacity = '0.7';
   });
 
+  // Add click handler if provided
+  if (onIconClick) {
+    icon.addEventListener('click', (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      onIconClick(icon, field, fieldType);
+    });
+  }
+
   // Append icon to document body (not field parent) to avoid layout interference
   document.body.appendChild(icon);
 
@@ -192,17 +202,18 @@ export function removeAllIcons() {
 /**
  * Initializes form detection and icon injection
  * @param {string} currentDomain - The current domain
+ * @param {Function} onIconClick - Optional callback when icon is clicked
  * @returns {Array<Object>} Detected forms
  */
-export function initFormDetection(currentDomain) {
+export function initFormDetection(currentDomain, onIconClick) {
   const forms = detectLoginForms(currentDomain);
 
   forms.forEach((formData) => {
     if (formData.usernameField) {
-      injectPassForgeIcon(formData.usernameField, 'username');
+      injectPassForgeIcon(formData.usernameField, 'username', onIconClick);
     }
     if (formData.passwordField) {
-      injectPassForgeIcon(formData.passwordField, 'password');
+      injectPassForgeIcon(formData.passwordField, 'password', onIconClick);
     }
   });
 
