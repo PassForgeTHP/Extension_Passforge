@@ -57,5 +57,39 @@ export default defineBackground({
     });
 
     console.log('Message handlers initialized and ready');
+
+    // Auto-lock timer setup
+    const AUTO_LOCK_ALARM = 'passforge-auto-lock';
+    const AUTO_LOCK_MINUTES = 15; // Auto-lock after 15 minutes of inactivity
+
+    // Listen for alarm events
+    chrome.alarms.onAlarm.addListener(async (alarm) => {
+      if (alarm.name === AUTO_LOCK_ALARM) {
+        console.log('[Background] Auto-lock timer triggered');
+        const store = useVaultStore.getState();
+        if (!store.isLocked) {
+          await store.lock();
+          console.log('[Background] Vault auto-locked after', AUTO_LOCK_MINUTES, 'minutes');
+        }
+      }
+    });
+
+    // Create auto-lock alarm when unlock happens
+    // Listen for vault state changes from popup
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === 'UNLOCK_VAULT') {
+        // Schedule auto-lock alarm
+        chrome.alarms.create(AUTO_LOCK_ALARM, {
+          delayInMinutes: AUTO_LOCK_MINUTES
+        });
+        console.log('[Background] Auto-lock scheduled for', AUTO_LOCK_MINUTES, 'minutes');
+      } else if (message.type === 'LOCK_VAULT') {
+        // Clear alarm when manually locked
+        chrome.alarms.clear(AUTO_LOCK_ALARM);
+        console.log('[Background] Auto-lock alarm cleared');
+      }
+    });
+
+    console.log('[Background] Auto-lock timer configured (' + AUTO_LOCK_MINUTES + ' minutes)');
   },
 });
