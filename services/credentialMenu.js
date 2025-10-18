@@ -85,10 +85,10 @@ function createMenuElement(credentials, domain, onSelect) {
   menu.className = 'passforge-credential-menu';
   menu.style.cssText = `
     position: fixed;
-    background: white;
-    border: 2px solid #af0024;
+    background: #1a1720;
+    border: 2px solid #77080e;
     border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(175, 0, 36, 0.15);
+    box-shadow: 0 8px 24px rgba(119, 8, 14, 0.3);
     min-width: 250px;
     max-width: 350px;
     max-height: 300px;
@@ -96,16 +96,17 @@ function createMenuElement(credentials, domain, onSelect) {
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
     font-size: 14px;
+    color: #e3d3bf;
   `;
 
   // Add header
   const header = document.createElement('div');
   header.style.cssText = `
     padding: 8px 12px;
-    background: #af0024;
+    background: linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%);
     border-bottom: none;
     font-weight: 600;
-    color: white;
+    color: #e3d3bf;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -140,7 +141,7 @@ function createCredentialItem(credential, onSelect) {
   item.style.cssText = `
     padding: 10px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #f6f8fa;
+    border-bottom: 1px solid rgba(119, 8, 14, 0.2);
     transition: background-color 0.1s ease;
   `;
 
@@ -148,7 +149,7 @@ function createCredentialItem(credential, onSelect) {
   const title = document.createElement('div');
   title.style.cssText = `
     font-weight: 500;
-    color: #24292f;
+    color: #e3d3bf;
     margin-bottom: 2px;
   `;
   title.textContent = credential.title || credential.domain || 'Untitled';
@@ -156,7 +157,7 @@ function createCredentialItem(credential, onSelect) {
   const username = document.createElement('div');
   username.style.cssText = `
     font-size: 12px;
-    color: #57606a;
+    color: rgba(227, 211, 191, 0.6);
   `;
   username.textContent = credential.username || 'No username';
 
@@ -165,7 +166,7 @@ function createCredentialItem(credential, onSelect) {
 
   // Hover effect
   item.addEventListener('mouseenter', () => {
-    item.style.backgroundColor = 'rgba(175, 0, 36, 0.08)';
+    item.style.backgroundColor = 'rgba(119, 8, 14, 0.15)';
   });
   item.addEventListener('mouseleave', () => {
     item.style.backgroundColor = 'transparent';
@@ -191,16 +192,16 @@ function showNoCredentialsMessage(anchorElement, isVaultLocked = false) {
   menu.className = 'passforge-credential-menu';
   menu.style.cssText = `
     position: fixed;
-    background: white;
-    border: 2px solid #af0024;
+    background: #1a1720;
+    border: 2px solid #77080e;
     border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(175, 0, 36, 0.15);
+    box-shadow: 0 8px 24px rgba(119, 8, 14, 0.3);
     padding: 16px;
     min-width: 200px;
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 14px;
-    color: #af0024;
+    color: #e3d3bf;
     text-align: center;
   `;
 
