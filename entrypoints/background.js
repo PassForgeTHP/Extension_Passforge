@@ -8,10 +8,23 @@
 
 import { onMessage } from '../services/messageService.js';
 import { handleMessage } from '../services/messageHandlers.js';
+import useVaultStore from '../services/vaultStore.js';
 
 export default defineBackground({
   main() {
     console.log('PassForge background script loaded');
+
+    // Attempt to restore session when service worker starts
+    // This keeps the vault unlocked across service worker restarts
+    (async () => {
+      const store = useVaultStore.getState();
+      const result = await store.restoreFromSession();
+      if (result.success) {
+        console.log('[Background] Vault session restored');
+      } else {
+        console.log('[Background] No session to restore');
+      }
+    })();
 
     // Listen for extension installation or update events
     // This is useful for initializing data or showing welcome screens
