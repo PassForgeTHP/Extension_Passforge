@@ -22,14 +22,16 @@ export async function showCredentialMenu(anchorElement, domain, onSelect) {
   const response = await sendMessage(MESSAGE_TYPES.AUTO_FILL_REQUEST, { domain });
 
   if (!response || !response.success || !response.credentials) {
-    showNoCredentialsMessage(anchorElement);
+    // Check if error is due to locked vault
+    const isVaultLocked = response?.error && response.error.toLowerCase().includes('locked');
+    showNoCredentialsMessage(anchorElement, isVaultLocked);
     return;
   }
 
   const credentials = response.credentials;
 
   if (credentials.length === 0) {
-    showNoCredentialsMessage(anchorElement);
+    showNoCredentialsMessage(anchorElement, false);
     return;
   }
 
@@ -42,18 +44,31 @@ export async function showCredentialMenu(anchorElement, domain, onSelect) {
   // Add to DOM
   document.body.appendChild(menu);
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside or on blur
   const closeHandler = (event) => {
+    // Check if click is outside menu and not on any input field
     if (!menu.contains(event.target) && event.target !== anchorElement) {
       removeCredentialMenu();
       document.removeEventListener('click', closeHandler, true);
+      document.removeEventListener('focusin', focusHandler, true);
     }
   };
 
-  // Delay adding the click handler to prevent immediate closure
+  // Close menu when focus moves to another field
+  const focusHandler = (event) => {
+    const isInputField = event.target.tagName === 'INPUT';
+    if (isInputField && !menu.contains(event.target)) {
+      removeCredentialMenu();
+      document.removeEventListener('click', closeHandler, true);
+      document.removeEventListener('focusin', focusHandler, true);
+    }
+  };
+
+  // Delay adding the handlers to prevent immediate closure
   setTimeout(() => {
     document.addEventListener('click', closeHandler, true);
-  }, 0);
+    document.addEventListener('focusin', focusHandler, true);
+  }, 100);
 
   console.log('[CredentialMenu] Menu displayed with', credentials.length, 'credential(s)');
 }
@@ -71,9 +86,9 @@ function createMenuElement(credentials, domain, onSelect) {
   menu.style.cssText = `
     position: fixed;
     background: white;
-    border: 1px solid #e1e4e8;
+    border: 2px solid #af0024;
     border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2);
+    box-shadow: 0 8px 24px rgba(175, 0, 36, 0.15);
     min-width: 250px;
     max-width: 350px;
     max-height: 300px;
@@ -87,12 +102,14 @@ function createMenuElement(credentials, domain, onSelect) {
   const header = document.createElement('div');
   header.style.cssText = `
     padding: 8px 12px;
-    border-bottom: 1px solid #e1e4e8;
+    background: #af0024;
+    border-bottom: none;
     font-weight: 600;
-    color: #24292f;
+    color: white;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    border-radius: 4px 4px 0 0;
   `;
   header.textContent = 'PassForge';
   menu.appendChild(header);
@@ -148,7 +165,7 @@ function createCredentialItem(credential, onSelect) {
 
   // Hover effect
   item.addEventListener('mouseenter', () => {
-    item.style.backgroundColor = '#f6f8fa';
+    item.style.backgroundColor = 'rgba(175, 0, 36, 0.08)';
   });
   item.addEventListener('mouseleave', () => {
     item.style.backgroundColor = 'transparent';
@@ -167,25 +184,32 @@ function createCredentialItem(credential, onSelect) {
 /**
  * Shows a message when no credentials are available
  * @param {HTMLElement} anchorElement - Element to position message relative to
+ * @param {boolean} isVaultLocked - Whether the vault is locked
  */
-function showNoCredentialsMessage(anchorElement) {
+function showNoCredentialsMessage(anchorElement, isVaultLocked = false) {
   const menu = document.createElement('div');
   menu.className = 'passforge-credential-menu';
   menu.style.cssText = `
     position: fixed;
     background: white;
-    border: 1px solid #e1e4e8;
+    border: 2px solid #af0024;
     border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2);
+    box-shadow: 0 8px 24px rgba(175, 0, 36, 0.15);
     padding: 16px;
     min-width: 200px;
     z-index: 999999;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 14px;
-    color: #57606a;
+    color: #af0024;
     text-align: center;
   `;
-  menu.textContent = 'No saved credentials for this site';
+
+  // Different message based on vault state
+  if (isVaultLocked) {
+    menu.textContent = 'Unlock vault to view and save passwords';
+  } else {
+    menu.textContent = 'No saved credentials for this site';
+  }
 
   positionMenu(menu, anchorElement);
   document.body.appendChild(menu);
@@ -195,17 +219,28 @@ function showNoCredentialsMessage(anchorElement) {
     removeCredentialMenu();
   }, 2000);
 
-  // Close on click outside
+  // Close on click outside or field change
   const closeHandler = (event) => {
     if (!menu.contains(event.target)) {
       removeCredentialMenu();
       document.removeEventListener('click', closeHandler, true);
+      document.removeEventListener('focusin', focusHandler, true);
+    }
+  };
+
+  const focusHandler = (event) => {
+    const isInputField = event.target.tagName === 'INPUT';
+    if (isInputField && !menu.contains(event.target)) {
+      removeCredentialMenu();
+      document.removeEventListener('click', closeHandler, true);
+      document.removeEventListener('focusin', focusHandler, true);
     }
   };
 
   setTimeout(() => {
     document.addEventListener('click', closeHandler, true);
-  }, 0);
+    document.addEventListener('focusin', focusHandler, true);
+  }, 100);
 }
 
 /**

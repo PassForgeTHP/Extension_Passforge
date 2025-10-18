@@ -127,7 +127,7 @@ export function injectPassForgeIcon(field, fieldType, onIconClick) {
   // Using Material Design Icons lock icon (mdi:lock-outline)
   icon.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-      <path fill="#4F46E5" d="M12 17a2 2 0 0 1-2-2c0-1.11.89-2 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m6 3V10H6v10zm0-12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10c0-1.11.89-2 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3"/>
+      <path fill="#af0024" d="M12 17a2 2 0 0 1-2-2c0-1.11.89-2 2-2a2 2 0 0 1 2 2a2 2 0 0 1-2 2m6 3V10H6v10zm0-12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10c0-1.11.89-2 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2zm-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3"/>
     </svg>
   `;
 
@@ -144,12 +144,12 @@ export function injectPassForgeIcon(field, fieldType, onIconClick) {
       justify-content: center;
       z-index: 10000;
       pointer-events: auto;
-      opacity: 0.7;
+      opacity: 0;
       transition: opacity 0.2s;
     `;
   };
 
-  // Initial positioning
+  // Initial positioning (hidden)
   positionIcon();
 
   // Update position on scroll and resize to keep icon aligned with field
@@ -167,12 +167,23 @@ export function injectPassForgeIcon(field, fieldType, onIconClick) {
   window.addEventListener('scroll', updatePosition, true);
   window.addEventListener('resize', updatePosition);
 
+  // Show icon only when field is focused
+  field.addEventListener('focus', () => {
+    icon.style.opacity = '1';
+    icon.style.pointerEvents = 'auto';
+  });
+
+  field.addEventListener('blur', () => {
+    // Delay hiding to allow clicking the icon
+    setTimeout(() => {
+      icon.style.opacity = '0';
+      icon.style.pointerEvents = 'none';
+    }, 200);
+  });
+
   // Add hover effect
   icon.addEventListener('mouseenter', () => {
     icon.style.opacity = '1';
-  });
-  icon.addEventListener('mouseleave', () => {
-    icon.style.opacity = '0.7';
   });
 
   // Add click handler if provided

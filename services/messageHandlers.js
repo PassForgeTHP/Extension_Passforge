@@ -145,7 +145,7 @@ async function handleUnlockVault({ masterPassword }) {
     // Schedule auto-lock alarm if unlock was successful
     if (result.success) {
       const AUTO_LOCK_ALARM = 'passforge-auto-lock';
-      const AUTO_LOCK_MINUTES = 15;
+      const AUTO_LOCK_MINUTES = 2;
 
       chrome.alarms.create(AUTO_LOCK_ALARM, {
         delayInMinutes: AUTO_LOCK_MINUTES

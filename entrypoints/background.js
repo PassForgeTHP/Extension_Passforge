@@ -60,7 +60,7 @@ export default defineBackground({
 
     // Auto-lock timer setup
     const AUTO_LOCK_ALARM = 'passforge-auto-lock';
-    const AUTO_LOCK_MINUTES = 15; // Auto-lock after 15 minutes of inactivity
+    const AUTO_LOCK_MINUTES = 2; // Auto-lock after 2 minutes of inactivity
 
     // Listen for alarm events
     chrome.alarms.onAlarm.addListener(async (alarm) => {

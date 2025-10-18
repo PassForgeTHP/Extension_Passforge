@@ -9,7 +9,6 @@
 import { sendMessage } from '../services/messageService.js';
 import { MESSAGE_TYPES } from '../services/messageTypes.js';
 import { detectLoginForms, injectPassForgeIcon } from '../services/formDetection.js';
-import { addVisualIndicator } from '../services/fieldIndicators.js';
 import { initKeyboardShortcuts } from '../services/keyboardShortcuts.js';
 import { autoFillForm, findMatchingCredential, extractDomain } from '../services/autoFillService.js';
 import { showCredentialMenu } from '../services/credentialMenu.js';
@@ -98,12 +97,26 @@ export default defineContentScript({
 
           if (usernameField && !usernameHasIcon) {
             injectPassForgeIcon(usernameField, 'username', handleIconClick);
-            addVisualIndicator(usernameField);
+
+            // Auto-open dropdown on field focus
+            usernameField.addEventListener('focus', async () => {
+              const icon = document.querySelector(`.passforge-icon[data-field-type="username"]`);
+              if (icon) {
+                await handleIconClick(icon, usernameField, 'username');
+              }
+            }, { once: false });
           }
 
           if (passwordField && !passwordHasIcon) {
             injectPassForgeIcon(passwordField, 'password', handleIconClick);
-            addVisualIndicator(passwordField);
+
+            // Auto-open dropdown on field focus
+            passwordField.addEventListener('focus', async () => {
+              const icon = document.querySelector(`.passforge-icon[data-field-type="password"]`);
+              if (icon) {
+                await handleIconClick(icon, passwordField, 'password');
+              }
+            }, { once: false });
           }
         });
 
