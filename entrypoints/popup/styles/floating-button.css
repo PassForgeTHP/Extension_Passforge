@@ -1,0 +1,37 @@
+/* Floating Action Button - Add Password FAB */
+
+.fab-add {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-dark);
+  border: 2px solid var(--medium-red);
+  color: var(--light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(175, 0, 36, 0.4),
+              0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.fab-add:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 6px 20px rgba(175, 0, 36, 0.6),
+              0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.fab-add:active {
+  transform: scale(0.95) rotate(90deg);
+}
+
+.fab-add svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+}

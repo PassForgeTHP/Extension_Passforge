@@ -1,3 +1,18 @@
+/**
+ * Content script for PassForge extension
+ * Runs on all web pages to detect login forms and interact with them
+ * - Detects password and username fields
+ * - Communicates with background script to get/save passwords
+ * - Adds visual indicators to detected fields
+ */
+
+import { sendMessage } from '../services/messageService.js';
+import { MESSAGE_TYPES } from '../services/messageTypes.js';
+import { detectLoginForms, initFormDetection } from '../services/formDetection.js';
+import { addVisualIndicator } from '../services/fieldIndicators.js';
+import { initKeyboardShortcuts } from '../services/keyboardShortcuts.js';
+import { autoFillForm, findMatchingCredential, extractDomain } from '../services/autoFillService.js';
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   main() {
@@ -7,108 +22,125 @@ export default defineContentScript({
     const currentDomain = window.location.hostname;
     console.log(`Current domain: ${currentDomain}`);
 
-    // Detect password input fields
-    function detectPasswordFields() {
-      const passwordInputs = document.querySelectorAll('input[type="password"]');
-      console.log(`Found ${passwordInputs.length} password field(s)`);
-      return Array.from(passwordInputs);
-    }
+    // Store detected forms for auto-fill
+    let detectedForms = [];
 
-    // Detect username/email input fields
-    function detectUsernameFields() {
-      const usernameSelectors = [
-        'input[type="email"]',
-        'input[type="text"][name*="user" i]',
-        'input[type="text"][name*="email" i]',
-        'input[type="text"][name*="login" i]',
-        'input[type="text"][id*="user" i]',
-        'input[type="text"][id*="email" i]',
-        'input[type="text"][id*="login" i]',
-        'input[autocomplete="username"]',
-        'input[autocomplete="email"]'
-      ];
+    // Request passwords for current domain from background script
+    async function requestPasswordsForDomain() {
+      try {
+        // Send message to background script requesting passwords for this domain
+        const response = await sendMessage(MESSAGE_TYPES.GET_PASSWORD, {
+          domain: currentDomain
+        });
 
-      const usernameInputs = document.querySelectorAll(usernameSelectors.join(','));
-      console.log(`Found ${usernameInputs.length} potential username/email field(s)`);
-      return Array.from(usernameInputs);
-    }
-
-    // Add visual indicator to detected fields
-    function addVisualIndicator(field) {
-      if (field.dataset.passforgeDetected) return; // Already marked
-
-      field.dataset.passforgeDetected = 'true';
-      field.style.outline = '2px solid #3498db';
-      field.style.outlineOffset = '2px';
-
-      // Add icon to the field
-      const icon = document.createElement('span');
-      icon.textContent = '🔐';
-      icon.style.cssText = `
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        pointer-events: none;
-        font-size: 16px;
-        z-index: 10000;
-      `;
-
-      // Make parent relative if needed
-      const parent = field.parentElement;
-      if (parent && getComputedStyle(parent).position === 'static') {
-        parent.style.position = 'relative';
-      }
-
-      field.parentElement?.appendChild(icon);
-    }
-
-    // Detect login forms
-    function detectLoginForms() {
-      const passwordFields = detectPasswordFields();
-      const usernameFields = detectUsernameFields();
-
-      const loginForms = [];
-
-      passwordFields.forEach(passwordField => {
-        const form = passwordField.closest('form') || document.body;
-        const usernameField = usernameFields.find(field =>
-          form.contains(field) && field.offsetParent !== null
-        );
-
-        if (usernameField) {
-          loginForms.push({
-            form,
-            usernameField,
-            passwordField,
-            domain: currentDomain
-          });
-
-          // Add visual indicators
-          addVisualIndicator(usernameField);
-          addVisualIndicator(passwordField);
+        if (response.success) {
+          console.log(`Found ${response.count} password(s) for ${currentDomain}`);
+          return response.passwords;
+        } else {
+          console.log('Could not retrieve passwords:', response.error);
+          return [];
         }
+      } catch (error) {
+        console.error('Error requesting passwords:', error);
+        return [];
+      }
+    }
+
+    // Detect and handle login forms on the page
+    async function handleLoginForms() {
+      // Use the imported initFormDetection function to inject icons
+      const loginForms = initFormDetection(currentDomain);
+
+      // Also add visual indicators
+      loginForms.forEach(({ usernameField, passwordField }) => {
+        addVisualIndicator(usernameField);
+        addVisualIndicator(passwordField);
       });
 
-      console.log(`Detected ${loginForms.length} login form(s)`);
+      // Store detected forms for auto-fill
+      detectedForms = loginForms;
+
+      // If forms were detected, request saved passwords from background
+      if (loginForms.length > 0) {
+        await requestPasswordsForDomain();
+      }
+
       return loginForms;
+    }
+
+    // Handle auto-fill when keyboard shortcut is triggered
+    async function handleAutoFill() {
+      if (detectedForms.length === 0) {
+        console.log('[AutoFill] No forms detected on this page');
+        return;
+      }
+
+      try {
+        // Request credentials from background script
+        const response = await sendMessage(MESSAGE_TYPES.AUTO_FILL_REQUEST, {
+          domain: currentDomain
+        });
+
+        if (response && response.success && response.credentials) {
+          // Find matching credential for current domain
+          const matchingCredential = findMatchingCredential(
+            response.credentials,
+            currentDomain
+          );
+
+          if (matchingCredential) {
+            // Show confirmation dialog
+            const confirmed = confirm(
+              `Fill with PassForge?\n\nUsername: ${matchingCredential.username}\nDomain: ${matchingCredential.domain}`
+            );
+
+            if (confirmed) {
+              // Fill the first detected form
+              const firstForm = detectedForms[0];
+              autoFillForm(
+                matchingCredential,
+                firstForm.usernameField,
+                firstForm.passwordField
+              );
+              console.log('[AutoFill] Form filled successfully');
+            }
+          } else {
+            console.log('[AutoFill] No matching credentials found for', currentDomain);
+            alert('No saved credentials found for this domain.');
+          }
+        } else {
+          console.log('[AutoFill] No credentials available');
+          alert('No saved credentials found.');
+        }
+      } catch (error) {
+        console.error('[AutoFill] Error during auto-fill:', error);
+        alert('Auto-fill failed. Please try again.');
+      }
     }
 
     // Run detection when page loads
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', detectLoginForms);
+      document.addEventListener('DOMContentLoaded', handleLoginForms);
     } else {
-      detectLoginForms();
+      handleLoginForms();
     }
 
     // Watch for dynamic forms (SPA apps)
     const observer = new MutationObserver(() => {
-      detectLoginForms();
+      handleLoginForms();
     });
 
     observer.observe(document.body, {
       childList: true,
       subtree: true
+    });
+
+    // Initialize keyboard shortcuts for auto-fill (Ctrl+Shift+P or Cmd+Shift+P)
+    const cleanupKeyboardShortcuts = initKeyboardShortcuts(handleAutoFill);
+
+    // Cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      cleanupKeyboardShortcuts();
     });
   },
 });
