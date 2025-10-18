@@ -20,20 +20,52 @@ export function detectPasswordFields() {
  */
 export function detectUsernameFields() {
   const usernameSelectors = [
+    // Type-based selectors
     'input[type="email"]',
+
+    // Name attribute patterns (with and without type restriction)
     'input[type="text"][name*="user" i]',
     'input[type="text"][name*="email" i]',
     'input[type="text"][name*="login" i]',
+    'input[name*="user" i]',
+    'input[name*="email" i]',
+    'input[name*="login" i]',
+
+    // ID attribute patterns
     'input[type="text"][id*="user" i]',
     'input[type="text"][id*="email" i]',
     'input[type="text"][id*="login" i]',
+    'input[id*="user" i]',
+    'input[id*="email" i]',
+    'input[id*="login" i]',
+
+    // Placeholder patterns (common for React forms)
+    'input[placeholder*="email" i]',
+    'input[placeholder*="user" i]',
+    'input[placeholder*="login" i]',
+
+    // Class name patterns
+    'input[class*="email" i]',
+    'input[class*="user" i]',
+    'input[class*="login" i]',
+
+    // Autocomplete attributes
     'input[autocomplete="username"]',
     'input[autocomplete="email"]'
   ];
 
   const usernameInputs = document.querySelectorAll(usernameSelectors.join(','));
-  console.log(`Found ${usernameInputs.length} potential username/email field(s)`);
-  return Array.from(usernameInputs);
+
+  // Filter out password fields, hidden fields, and non-visible fields
+  const filtered = Array.from(usernameInputs).filter(input => {
+    return input.type !== 'password' &&
+           input.type !== 'hidden' &&
+           input.type !== 'checkbox' &&
+           input.offsetParent !== null;
+  });
+
+  console.log(`Found ${filtered.length} potential username/email field(s)`);
+  return filtered;
 }
 
 /**
@@ -98,21 +130,41 @@ export function injectPassForgeIcon(field, fieldType) {
     </svg>
   `;
 
-  // Style the icon
-  icon.style.cssText = `
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    pointer-events: auto;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  `;
+  // Position icon using fixed positioning to avoid modifying parent styles
+  const positionIcon = () => {
+    const rect = field.getBoundingClientRect();
+    icon.style.cssText = `
+      position: fixed;
+      left: ${rect.right - 26}px;
+      top: ${rect.top + rect.height / 2 - 9}px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      pointer-events: auto;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    `;
+  };
+
+  // Initial positioning
+  positionIcon();
+
+  // Update position on scroll and resize to keep icon aligned with field
+  const updatePosition = () => {
+    if (document.body.contains(field)) {
+      positionIcon();
+    } else {
+      // Field was removed from DOM, clean up icon and listeners
+      icon.remove();
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    }
+  };
+
+  window.addEventListener('scroll', updatePosition, true);
+  window.addEventListener('resize', updatePosition);
 
   // Add hover effect
   icon.addEventListener('mouseenter', () => {
@@ -122,17 +174,8 @@ export function injectPassForgeIcon(field, fieldType) {
     icon.style.opacity = '0.7';
   });
 
-  // Make parent position relative if it's not already positioned
-  const parent = field.parentElement;
-  if (parent) {
-    const parentStyle = window.getComputedStyle(parent);
-    if (parentStyle.position === 'static') {
-      parent.style.position = 'relative';
-    }
-  }
-
-  // Insert icon after the field
-  field.parentElement?.appendChild(icon);
+  // Append icon to document body (not field parent) to avoid layout interference
+  document.body.appendChild(icon);
 
   console.log(`[FormDetection] Icon injected for ${fieldType} field`);
 }
