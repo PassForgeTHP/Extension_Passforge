@@ -74,22 +74,6 @@ export default defineBackground({
       }
     });
 
-    // Create auto-lock alarm when unlock happens
-    // Listen for vault state changes from popup
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === 'UNLOCK_VAULT') {
-        // Schedule auto-lock alarm
-        chrome.alarms.create(AUTO_LOCK_ALARM, {
-          delayInMinutes: AUTO_LOCK_MINUTES
-        });
-        console.log('[Background] Auto-lock scheduled for', AUTO_LOCK_MINUTES, 'minutes');
-      } else if (message.type === 'LOCK_VAULT') {
-        // Clear alarm when manually locked
-        chrome.alarms.clear(AUTO_LOCK_ALARM);
-        console.log('[Background] Auto-lock alarm cleared');
-      }
-    });
-
     console.log('[Background] Auto-lock timer configured (' + AUTO_LOCK_MINUTES + ' minutes)');
   },
 });

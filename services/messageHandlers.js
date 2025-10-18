@@ -98,7 +98,12 @@ async function handleLockVault() {
     const store = useVaultStore.getState();
 
     // Lock the vault (clears passwords and keys from RAM)
-    store.lock();
+    await store.lock();
+
+    // Clear auto-lock alarm when manually locked
+    const AUTO_LOCK_ALARM = 'passforge-auto-lock';
+    chrome.alarms.clear(AUTO_LOCK_ALARM);
+    console.log('[MessageHandler] Auto-lock alarm cleared');
 
     return {
       success: true,
@@ -136,6 +141,17 @@ async function handleUnlockVault({ masterPassword }) {
 
     // Attempt to unlock the vault
     const result = await store.unlock(masterPassword);
+
+    // Schedule auto-lock alarm if unlock was successful
+    if (result.success) {
+      const AUTO_LOCK_ALARM = 'passforge-auto-lock';
+      const AUTO_LOCK_MINUTES = 15;
+
+      chrome.alarms.create(AUTO_LOCK_ALARM, {
+        delayInMinutes: AUTO_LOCK_MINUTES
+      });
+      console.log('[MessageHandler] Auto-lock scheduled for', AUTO_LOCK_MINUTES, 'minutes');
+    }
 
     return result;
   } catch (error) {
