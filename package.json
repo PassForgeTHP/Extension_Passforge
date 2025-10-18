@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/chrome": "^0.0.268",
     "@vitejs/plugin-react": "^4.3.1",
-    "@wxt-dev/module-react": "^1.1.1"
+    "@wxt-dev/module-react": "^1.1.1",
+    "web-ext": "^9.0.0"
   }
 }

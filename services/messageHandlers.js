@@ -173,6 +173,47 @@ async function handleSyncVault() {
 }
 
 /**
+ * Handle AUTO_FILL_REQUEST message
+ * Retrieves all credentials for auto-fill functionality
+ * The content script will then match credentials to the current domain
+ *
+ * @param {Object} payload - Contains { domain: string }
+ * @returns {Promise<Object>} Response with all credentials
+ */
+async function handleAutoFillRequest({ domain }) {
+  try {
+    // Get the vault store instance
+    const store = useVaultStore.getState();
+
+    // Check if vault is locked
+    if (store.isLocked) {
+      return {
+        success: false,
+        error: 'Vault is locked. Please unlock first.',
+      };
+    }
+
+    // Get all passwords for matching in content script
+    // We send all passwords and let the content script find the best match
+    const credentials = store.passwords;
+
+    console.log(`[AutoFill] Providing ${credentials.length} credentials for domain: ${domain}`);
+
+    return {
+      success: true,
+      credentials,
+      domain,
+    };
+  } catch (error) {
+    console.error('Error handling AUTO_FILL_REQUEST:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
  * Main message router
  * Routes incoming messages to the appropriate handler
  *
@@ -198,6 +239,9 @@ export async function handleMessage(message) {
 
     case MESSAGE_TYPES.SYNC_VAULT:
       return handleSyncVault();
+
+    case MESSAGE_TYPES.AUTO_FILL_REQUEST:
+      return handleAutoFillRequest(payload);
 
     default:
       // This should never happen if messageService validates types correctly

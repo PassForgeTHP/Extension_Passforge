@@ -20,20 +20,52 @@ export function detectPasswordFields() {
  */
 export function detectUsernameFields() {
   const usernameSelectors = [
+    // Type-based selectors
     'input[type="email"]',
+
+    // Name attribute patterns (with and without type restriction)
     'input[type="text"][name*="user" i]',
     'input[type="text"][name*="email" i]',
     'input[type="text"][name*="login" i]',
+    'input[name*="user" i]',
+    'input[name*="email" i]',
+    'input[name*="login" i]',
+
+    // ID attribute patterns
     'input[type="text"][id*="user" i]',
     'input[type="text"][id*="email" i]',
     'input[type="text"][id*="login" i]',
+    'input[id*="user" i]',
+    'input[id*="email" i]',
+    'input[id*="login" i]',
+
+    // Placeholder patterns (common for React forms)
+    'input[placeholder*="email" i]',
+    'input[placeholder*="user" i]',
+    'input[placeholder*="login" i]',
+
+    // Class name patterns
+    'input[class*="email" i]',
+    'input[class*="user" i]',
+    'input[class*="login" i]',
+
+    // Autocomplete attributes
     'input[autocomplete="username"]',
     'input[autocomplete="email"]'
   ];
 
   const usernameInputs = document.querySelectorAll(usernameSelectors.join(','));
-  console.log(`Found ${usernameInputs.length} potential username/email field(s)`);
-  return Array.from(usernameInputs);
+
+  // Filter out password fields, hidden fields, and non-visible fields
+  const filtered = Array.from(usernameInputs).filter(input => {
+    return input.type !== 'password' &&
+           input.type !== 'hidden' &&
+           input.type !== 'checkbox' &&
+           input.offsetParent !== null;
+  });
+
+  console.log(`Found ${filtered.length} potential username/email field(s)`);
+  return filtered;
 }
 
 /**
