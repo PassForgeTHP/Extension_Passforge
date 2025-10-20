@@ -1,0 +1,17 @@
+/* Layout Components - Grid Systems and Panes */
+
+/* Two-Pane Layout */
+.app-main-two-pane {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.middle-pane {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(227, 211, 191, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
