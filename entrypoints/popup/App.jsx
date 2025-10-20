@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import LoginView from './components/LoginView';
+import SetupMasterPasswordView from './components/SetupMasterPasswordView';
 import Header from './components/Header';
 import BurgerMenu from './components/BurgerMenu';
 import SearchBar from './components/SearchBar';
@@ -15,6 +16,7 @@ function App() {
   const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
   const { lockVault: lockBackground } = useBackgroundMessage();
 
+  const [hasMasterPassword, setHasMasterPassword] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -62,6 +64,38 @@ function App() {
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+   useEffect(() => {
+    const checkMasterPassword = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('http://localhost:3000/api/master_password', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        setHasMasterPassword(data.has_master_password);
+      } catch (err) {
+        console.error('Error while verifying the master password :', err);
+      }
+    };
+
+    checkMasterPassword();
+  }, []);
+
+  if (hasMasterPassword === null) {
+    return <div className="loading-screen">Loading...</div>;
+  }
+
+  if (!hasMasterPassword) {
+    return (
+      <div className="app">
+        <SetupMasterPasswordView onSetupComplete={() => setHasMasterPassword(true)} />
+      </div>
+    );
+  }
 
   if (isLocked) {
     return (

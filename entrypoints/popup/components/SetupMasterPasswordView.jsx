@@ -22,7 +22,7 @@ function SetupMasterPasswordView({ onSetupComplete }) {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token"); // ton JWT après login classique
+      const token = localStorage.getItem("token");
       const res = await fetch("https://ton-api.com/api/master_password/setup", {
         method: "POST",
         headers: {
