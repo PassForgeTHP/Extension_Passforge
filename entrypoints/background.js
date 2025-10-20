@@ -8,10 +8,23 @@
 
 import { onMessage } from '../services/messageService.js';
 import { handleMessage } from '../services/messageHandlers.js';
+import useVaultStore from '../services/vaultStore.js';
 
 export default defineBackground({
   main() {
     console.log('PassForge background script loaded');
+
+    // Attempt to restore session when service worker starts
+    // This keeps the vault unlocked across service worker restarts
+    (async () => {
+      const store = useVaultStore.getState();
+      const result = await store.restoreFromSession();
+      if (result.success) {
+        console.log('[Background] Vault session restored');
+      } else {
+        console.log('[Background] No session to restore');
+      }
+    })();
 
     // Listen for extension installation or update events
     // This is useful for initializing data or showing welcome screens
@@ -44,5 +57,23 @@ export default defineBackground({
     });
 
     console.log('Message handlers initialized and ready');
+
+    // Auto-lock timer setup
+    const AUTO_LOCK_ALARM = 'passforge-auto-lock';
+    const AUTO_LOCK_MINUTES = 2; // Auto-lock after 2 minutes of inactivity
+
+    // Listen for alarm events
+    chrome.alarms.onAlarm.addListener(async (alarm) => {
+      if (alarm.name === AUTO_LOCK_ALARM) {
+        console.log('[Background] Auto-lock timer triggered');
+        const store = useVaultStore.getState();
+        if (!store.isLocked) {
+          await store.lock();
+          console.log('[Background] Vault auto-locked after', AUTO_LOCK_MINUTES, 'minutes');
+        }
+      }
+    });
+
+    console.log('[Background] Auto-lock timer configured (' + AUTO_LOCK_MINUTES + ' minutes)');
   },
 });

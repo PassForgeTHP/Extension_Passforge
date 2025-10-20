@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { HiShieldCheck, HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import useVaultStore from '../../../services/vaultStore';
+import { useBackgroundMessage } from '../hooks/useBackgroundMessage';
 
 function LoginView() {
   const unlock = useVaultStore(state => state.unlock);
+  const { unlockVault: unlockBackground } = useBackgroundMessage();
 
   const [masterPassword, setMasterPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,10 +23,14 @@ function LoginView() {
     setLoading(true);
     setError('');
 
-    const result = await unlock(masterPassword);
+    // Unlock both popup store AND background store
+    const [popupResult, backgroundResult] = await Promise.all([
+      unlock(masterPassword),
+      unlockBackground(masterPassword)
+    ]);
 
-    if (!result.success) {
-      setError(result.error || 'Invalid master password');
+    if (!popupResult.success || !backgroundResult.success) {
+      setError(popupResult.error || backgroundResult.error || 'Invalid master password');
       setLoading(false);
     }
   };

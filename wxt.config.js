@@ -10,7 +10,7 @@ export default defineConfig({
     name: 'PassForge',
     description: 'Secure password management extension',
     version: '1.0.0',
-    permissions: ['storage', 'activeTab', 'tabs'],
+    permissions: ['storage', 'activeTab', 'tabs', 'alarms'],
     host_permissions: [],
   },
 });

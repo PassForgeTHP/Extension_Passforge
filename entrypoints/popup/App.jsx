@@ -8,10 +8,12 @@ import PasswordDetails from './components/PasswordDetails';
 import AddPasswordForm from './components/AddPasswordForm';
 import EditPasswordForm from './components/EditPasswordForm';
 import useVaultStore from '../../services/vaultStore';
+import { useBackgroundMessage } from './hooks/useBackgroundMessage';
 import './style.css';
 
 function App() {
   const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
+  const { lockVault: lockBackground } = useBackgroundMessage();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -28,8 +30,12 @@ function App() {
     { id: 'shared', name: 'Shared', color: '#77080e', icon: '👥' }
   ];
 
-  const handleLogout = () => {
-    lock();
+  const handleLogout = async () => {
+    // Lock both popup store AND background store
+    await Promise.all([
+      lock(),
+      lockBackground()
+    ]);
   };
 
   // Filter by vault - for now show all since passwords don't have vault_id yet
