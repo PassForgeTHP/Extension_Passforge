@@ -23,7 +23,7 @@ function SetupMasterPasswordView({ onSetupComplete }) {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://ton-api.com/api/master_password/setup", {
+      const res = await fetch("http://localhost:3000/api/master_password/setup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

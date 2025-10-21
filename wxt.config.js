@@ -10,7 +10,24 @@ export default defineConfig({
     name: 'PassForge',
     description: 'Secure password management extension',
     version: '1.0.0',
-    permissions: ['storage', 'activeTab', 'tabs', 'alarms'],
-    host_permissions: [],
+    permissions: ['storage', 'activeTab', 'tabs', 'alarms','scripting','runtime'],
+    host_permissions: [
+      'http://localhost:3000/*',
+      'https://passforge-api.onrender.com*'
+    ],
+    externally_connectable: {
+      matches: [
+        'http://localhost:5173/*',
+        'https://pass-forge-en.netlify.app/*'
+      ],
+    },
+    commands: {
+      'wxt:reload-extension': {
+        description: 'Reload the extension during development',
+        suggested_key: {
+          default: 'Alt+R',
+        },
+      },
+    },
   },
 });
