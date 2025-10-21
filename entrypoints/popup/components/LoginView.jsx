@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { HiShieldCheck, HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import useVaultStore from '../../../services/vaultStore';
 import { useBackgroundMessage } from '../hooks/useBackgroundMessage';
+import bcrypt from 'bcryptjs';
+
 
 function LoginView() {
   const unlock = useVaultStore(state => state.unlock);
