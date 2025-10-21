@@ -78,9 +78,9 @@ function App() {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          console.log("Status de la réponse :", res.status);
+          // console.log("Status de la réponse :", res.status);
           const data = await res.json();
-          console.log("Data recieved :", data);
+          // console.log("Data recieved :", data);
 
           setHasMasterPassword(data.has_master_password);
         } catch (err) {

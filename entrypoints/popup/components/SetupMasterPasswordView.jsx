@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { HiShieldCheck, HiLockClosed } from "react-icons/hi";
+import bcrypt from 'bcryptjs';
 
 function SetupMasterPasswordView({ onSetupComplete }) {
   const [password, setPassword] = useState("");
@@ -23,10 +24,8 @@ function SetupMasterPasswordView({ onSetupComplete }) {
 
     try {
       chrome.storage.local.get("token", async ({ token }) => {
-        console.log("Token récupéré depuis chrome.storage :", token);
-
         if (!token) {
-          setError("No token found — please log in again.");
+          setError("You must be logged in to set a master password.");
           setLoading(false);
           return;
         }
@@ -43,18 +42,33 @@ function SetupMasterPasswordView({ onSetupComplete }) {
         });
 
         const data = await res.json();
-        console.log("Réponse de l’API :", data);
+        if (!res.ok) {
+          setError(data.error || "Failed to setup master password via API");
+          setLoading(false);
+          return;
+        }
 
-        if (!res.ok) throw new Error(data.error || "Failed to setup master password");
+        console.log("Master password successfully saved via API");
 
-        onSetupComplete();
+        // local hash for offline acess
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(password, salt);
+
+        chrome.storage.local.set({
+          hasMasterPassword: true,
+          masterPasswordHash: hash
+        }, () => {
+          console.log("Master password hash saved locally");
+          onSetupComplete();
+          setLoading(false);
+        });
       });
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
+
 
 
   return (

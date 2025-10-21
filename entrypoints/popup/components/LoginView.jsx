@@ -23,17 +23,64 @@ function LoginView() {
     setLoading(true);
     setError('');
 
-    // Unlock both popup store AND background store
-    const [popupResult, backgroundResult] = await Promise.all([
-      unlock(masterPassword),
-      unlockBackground(masterPassword)
-    ]);
+    try {
+      chrome.storage.local.get(['masterPasswordHash', 'token'], async ({ masterPasswordHash, token }) => {
+        if (!masterPasswordHash) {
+          setError("No master password set. Please set it up first.");
+          setLoading(false);
+          return;
+        }
 
-    if (!popupResult.success || !backgroundResult.success) {
-      setError(popupResult.error || backgroundResult.error || 'Invalid master password');
+        const isValidLocal = bcrypt.compareSync(masterPassword, masterPasswordHash);
+        if (!isValidLocal) {
+          setError("Invalid master password");
+          setLoading(false);
+          return;
+        }
+
+        if (token) {
+          try {
+            const res = await fetch("http://localhost:3000/api/master_password/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+              },
+              body: JSON.stringify({ user: { master_password: masterPassword } }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              console.warn("API verification failed, continuing offline:", data.error);
+            } else {
+              console.log("Master password verified via API");
+            }
+          } catch (apiErr) {
+            console.warn("API verification error, continuing offline:", apiErr.message);
+          }
+        }
+
+        const [popupResult, backgroundResult] = await Promise.all([
+          unlock(masterPassword),
+          unlockBackground(masterPassword),
+        ]);
+
+        if (!popupResult.success || !backgroundResult.success) {
+          setError(popupResult.error || backgroundResult.error || "Vault unlock failed");
+          setLoading(false);
+          return;
+        }
+
+        // console.log("Vault successfully unlocked!");
+        setLoading(false);
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
       setLoading(false);
     }
   };
+
 
   return (
     <div className="login-container">
