@@ -22,26 +22,40 @@ function SetupMasterPasswordView({ onSetupComplete }) {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3000/api/master_password/setup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ master_password: password }),
+      chrome.storage.local.get("token", async ({ token }) => {
+        console.log("Token récupéré depuis chrome.storage :", token);
+
+        if (!token) {
+          setError("No token found — please log in again.");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch("http://localhost:3000/api/master_password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user: { master_password: password },
+          }),
+        });
+
+        const data = await res.json();
+        console.log("Réponse de l’API :", data);
+
+        if (!res.ok) throw new Error(data.error || "Failed to setup master password");
+
+        onSetupComplete();
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to setup master password");
-
-      onSetupComplete();
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div>

@@ -65,21 +65,28 @@ function App() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-   useEffect(() => {
+  useEffect(() => {
     const checkMasterPassword = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!chrome?.storage) return;
 
-      try {
-        const res = await fetch('http://localhost:3000/api/master_password', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      chrome.storage.local.get('token', async ({ token }) => {
+        console.log("Token from chrome.storage :", token);
+        if (!token) return;
 
-        const data = await res.json();
-        setHasMasterPassword(data.has_master_password);
-      } catch (err) {
-        console.error('Error while verifying the master password :', err);
-      }
+        try {
+          const res = await fetch('http://localhost:3000/api/master_password', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          console.log("Status de la réponse :", res.status);
+          const data = await res.json();
+          console.log("Data recieved :", data);
+
+          setHasMasterPassword(data.has_master_password);
+        } catch (err) {
+          console.error('Error while verifying the master password :', err);
+        }
+      });
     };
 
     checkMasterPassword();
