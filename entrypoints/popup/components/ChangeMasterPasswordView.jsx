@@ -36,97 +36,101 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
     setLoading(true);
 
       try {
-      chrome.storage.local.get(["masterPasswordHash", "masterPasswordSalt", "token"], async ({ masterPasswordHash, masterPasswordSalt, token }) => {
-        if (!masterPasswordHash || !masterPasswordSalt) {
-          setError("No master password found locally.");
-          setLoading(false);
-          return;
-        }
+      const { masterPasswordHash, masterPasswordSalt, token } =
+        await chrome.storage.local.get([
+          "masterPasswordHash",
+          "masterPasswordSalt",
+          "token",
+        ]);
 
-        const isValid = await verifyMasterPassword(
-          currentPassword,
-          masterPasswordHash,
-          new Uint8Array(masterPasswordSalt)
+      if (!masterPasswordHash || !masterPasswordSalt) {
+        setError("No master password found locally.");
+        setLoading(false);
+        return;
+      }
+
+      const isValid = await verifyMasterPassword(
+        currentPassword,
+        masterPasswordHash,
+        new Uint8Array(masterPasswordSalt)
+      );
+
+      if (!isValid) {
+        setError("Invalid current master password");
+        setLoading(false);
+        return;
+      }
+
+      if (!token) {
+        setError("You must be logged in to update master password");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("http://localhost:3000/api/master_password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          current_master_password: currentPassword,
+          user: { master_password: newPassword },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to update master password via API");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Master password successfully updated on API");
+
+      const oldVault = vault || useVaultStore.getState().vault;
+
+      if (oldVault && oldVault.encryptedVault) {
+        const { salt, iv, encryptedVault } = oldVault;
+        const oldKey = await deriveKey(currentPassword, salt, true);
+        const decryptedVault = await decryptData(
+          { encrypted: encryptedVault, iv },
+          oldKey
         );
 
-        if (!isValid) {
-          setError("Invalid current master password");
-          setLoading(false);
-          return;
-        }
+        const newSalt = generateSalt();
+        const newKey = await deriveKey(newPassword, newSalt, true);
+        const { encrypted: newEncryptedVault, iv: newIv } = await encryptData(
+          decryptedVault,
+          newKey
+        );
 
-        if (token) {
-          try {
-            const res = await fetch("http://localhost:3000/api/master_password", {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                current_master_password: currentPassword,
-                user: { master_password: newPassword },
-              }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-              setError(data.error || "Failed to update master password via API");
-              setLoading(false);
-              return;
-            }
-
-            console.log("Master password updated via API");
-          } catch (apiErr) {
-            console.warn("API update failed — continuing offline:", apiErr);
-          }
-        }
-
-        const oldVault = vault || useVaultStore.getState().vault;
-
-        if (oldVault && oldVault.encryptedVault) {
-          try {
-            const { salt, iv, encryptedVault } = oldVault;
-
-            const oldKey = await deriveKey(currentPassword, salt, true);
-            const decryptedVault = await decryptData({ encrypted: encryptedVault, iv }, oldKey);
-
-            const newSalt = generateSalt();
-            const newKey = await deriveKey(newPassword, newSalt, true);
-            const { encrypted: newEncryptedVault, iv: newIv } = await encryptData(decryptedVault, newKey);
-
-            useVaultStore.setState({
-              masterKey: newKey,
-              salt: newSalt,
-              iv: newIv,
-              vault: { encryptedVault: newEncryptedVault, salt: newSalt, iv: newIv },
-            });
-
-            await saveVault();
-            console.log("🔒 Vault re-encrypted locally with new master password");
-          } catch (vaultErr) {
-            console.error("Error re-encrypting vault:", vaultErr);
-            setError("Failed to re-encrypt vault locally");
-            setLoading(false);
-            return;
-          }
-        }
-
-        const newSaltForHash = generateSalt();
-        const newHash = await hashMasterPassword(newPassword, newSaltForHash);
-
-        chrome.storage.local.set({
-          hasMasterPassword: true,
-          masterPasswordHash: newHash,
-          masterPasswordSalt: Array.from(newSaltForHash),
+        useVaultStore.setState({
+          masterKey: newKey,
+          salt: newSalt,
+          iv: newIv,
+          vault: { encryptedVault: newEncryptedVault, salt: newSalt, iv: newIv },
         });
 
-        setSuccess(true);
-        setLoading(false);
-        console.log("Master password successfully updated locally");
+        await saveVault();
+        console.log("🔐 Vault re-encrypted locally with new master password");
+      }
 
-        if (onComplete) onComplete();
+      const newSaltForHash = generateSalt();
+      const newHash = await hashMasterPassword(newPassword, newSaltForHash);
+
+      await chrome.storage.local.set({
+        hasMasterPassword: true,
+        masterPasswordHash: newHash,
+        masterPasswordSalt: Array.from(newSaltForHash),
       });
+
+      setSuccess(true);
+      setLoading(false);
+      console.log("Master password successfully updated locally");
+
+      if (onComplete) onComplete();
     } catch (err) {
       console.error("Error updating master password:", err);
       setError("Something went wrong while updating password");
