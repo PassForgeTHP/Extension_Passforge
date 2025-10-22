@@ -9,7 +9,7 @@
  */
 export function detectPasswordFields() {
   const passwordInputs = document.querySelectorAll('input[type="password"]');
-  console.log(`Found ${passwordInputs.length} password field(s)`);
+  // console.log(`Found ${passwordInputs.length} password field(s)`);
   return Array.from(passwordInputs);
 }
 
@@ -64,7 +64,7 @@ export function detectUsernameFields() {
            input.offsetParent !== null;
   });
 
-  console.log(`Found ${filtered.length} potential username/email field(s)`);
+  // console.log(`Found ${filtered.length} potential username/email field(s)`);
   return filtered;
 }
 
@@ -99,7 +99,7 @@ export function detectLoginForms(currentDomain) {
     }
   });
 
-  console.log(`Detected ${loginForms.length} login form(s)`);
+  // console.log(`Detected ${loginForms.length} login form(s)`);
   return loginForms;
 }
 
@@ -198,7 +198,7 @@ export function injectPassForgeIcon(field, fieldType, onIconClick) {
   // Append icon to document body (not field parent) to avoid layout interference
   document.body.appendChild(icon);
 
-  console.log(`[FormDetection] Icon injected for ${fieldType} field`);
+  // console.log(`[FormDetection] Icon injected for ${fieldType} field`);
 }
 
 /**
@@ -207,7 +207,7 @@ export function injectPassForgeIcon(field, fieldType, onIconClick) {
 export function removeAllIcons() {
   const icons = document.querySelectorAll('.passforge-icon');
   icons.forEach((icon) => icon.remove());
-  console.log('[FormDetection] All icons removed');
+  // console.log('[FormDetection] All icons removed');
 }
 
 /**
@@ -228,7 +228,7 @@ export function initFormDetection(currentDomain, onIconClick) {
     }
   });
 
-  console.log(`[FormDetection] Initialized, ${forms.length} form(s) detected`);
+  // console.log(`[FormDetection] Initialized, ${forms.length} form(s) detected`);
 
   return forms;
 }

@@ -75,5 +75,22 @@ export default defineBackground({
     });
 
     console.log('[Background] Auto-lock timer configured (' + AUTO_LOCK_MINUTES + ' minutes)');
+
+
+    chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+      if (message.type === "STORE_TOKEN") {
+        chrome.storage.local.set({ token: message.token });
+        console.log("Token received and stored :", message.token);
+        sendResponse({ success: true });
+      }
+    });
+
+    chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+      if (message.type === "CLEAR_TOKEN") {
+        chrome.storage.local.remove("token");
+        sendResponse({ success: true });
+      }
+    });
+
   },
 });
