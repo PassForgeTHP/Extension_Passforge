@@ -65,26 +65,37 @@ function App() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+   // ✅ Nouvelle logique hybride pour le master password
   useEffect(() => {
     const checkMasterPassword = async () => {
       if (!chrome?.storage) return;
 
-      chrome.storage.local.get('token', async ({ token }) => {
-        console.log("Token from chrome.storage :", token);
-        if (!token) return;
+      chrome.storage.local.get(["token", "hasMasterPassword", "masterPasswordHash"], async ({ token, hasMasterPassword, masterPasswordHash }) => {
+        if (masterPasswordHash && hasMasterPassword) {
+          // console.log("Master password found locally (offline mode)");
+          setHasMasterPassword(true);
+          return;
+        }
+
+        if (!token) {
+          console.log("⚠️ No token found and no local password — user must set one.");
+          setHasMasterPassword(false);
+          return;
+        }
 
         try {
-          const res = await fetch('http://localhost:3000/api/master_password', {
+          const res = await fetch("http://localhost:3000/api/master_password", {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          // console.log("Status de la réponse :", res.status);
           const data = await res.json();
-          // console.log("Data recieved :", data);
+          // console.log("API master password check:", data);
 
-          setHasMasterPassword(data.has_master_password);
+          chrome.storage.local.set({ hasMasterPassword: data.has_master_password || false });
+          setHasMasterPassword(!!data.has_master_password);
         } catch (err) {
-          console.error('Error while verifying the master password :', err);
+          console.error("Error checking master password from API:", err);
+          setHasMasterPassword(!!masterPasswordHash);
         }
       });
     };
