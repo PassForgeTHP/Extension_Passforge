@@ -5,6 +5,7 @@
 
 import { MESSAGE_TYPES } from './messageTypes.js';
 import useVaultStore from './vaultStore.js';
+import bcrypt from 'bcryptjs';
 
 /**
  * Handle GET_PASSWORD message
@@ -181,6 +182,69 @@ async function handleSyncVault() {
     };
   } catch (error) {
     console.error('Error handling SYNC_VAULT:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Handle HASH_PASSWORD message
+ * Hashes a master password using bcrypt for offline storage
+ *
+ * @param {Object} payload - Contains { password: string }
+ * @returns {Promise<Object>} Response with hashed password
+ */
+async function handleHashPassword({ password }) {
+  try {
+    if (!password) {
+      return {
+        success: false,
+        error: 'Password is required.',
+      };
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(password, salt);
+
+    return {
+      success: true,
+      hash,
+    };
+  } catch (error) {
+    console.error('Error handling HASH_PASSWORD:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Handle VERIFY_PASSWORD message
+ * Verifies a master password against a stored hash
+ *
+ * @param {Object} payload - Contains { password: string, hash: string }
+ * @returns {Promise<Object>} Response with verification result
+ */
+async function handleVerifyPassword({ password, hash }) {
+  try {
+    if (!password || !hash) {
+      return {
+        success: false,
+        error: 'Password and hash are required.',
+      };
+    }
+
+    const isValid = bcrypt.compareSync(password, hash);
+
+    return {
+      success: true,
+      isValid,
+    };
+  } catch (error) {
+    console.error('Error handling VERIFY_PASSWORD:', error);
     return {
       success: false,
       error: error.message,

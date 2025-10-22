@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { HiShieldCheck, HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import useVaultStore from '../../../services/vaultStore';
 import { useBackgroundMessage } from '../hooks/useBackgroundMessage';
-import bcrypt from 'bcryptjs';
+import { verifyMasterPassword } from '../../../services/cryptoService.js';
 
 
 function LoginView() {
@@ -26,14 +26,14 @@ function LoginView() {
     setError('');
 
     try {
-      chrome.storage.local.get(['masterPasswordHash'], async ({ masterPasswordHash }) => {
-        if (!masterPasswordHash) {
+      chrome.storage.local.get(['masterPasswordHash', 'masterPasswordSalt'], async ({ masterPasswordHash, masterPasswordSalt }) => {
+        if (!masterPasswordHash || !masterPasswordSalt) {
           setError("No master password set. Please set it up first.");
           setLoading(false);
           return;
         }
 
-        const isValid = bcrypt.compareSync(masterPassword, masterPasswordHash);
+        const isValid = await verifyMasterPassword(masterPassword, masterPasswordHash, new Uint8Array(masterPasswordSalt));
         if (!isValid) {
           setError("Invalid master password");
           setLoading(false);

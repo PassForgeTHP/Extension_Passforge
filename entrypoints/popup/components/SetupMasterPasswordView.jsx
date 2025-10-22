@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { HiShieldCheck, HiLockClosed } from "react-icons/hi";
 import useVaultStore from '../../../services/vaultStore'
-import { generateSalt, deriveKey, encryptData } from '../../../services/cryptoService.js'
-import bcrypt from 'bcryptjs';
+import { generateSalt, deriveKey, encryptData, hashMasterPassword } from '../../../services/cryptoService.js'
 
 function SetupMasterPasswordView({ onSetupComplete }) {
   const [password, setPassword] = useState("");
@@ -55,13 +54,14 @@ function SetupMasterPasswordView({ onSetupComplete }) {
         console.log("Master password successfully saved via API");
 
         // local hash for offline access
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(password, salt);
+        const masterSalt = generateSalt();
+        const hash = await hashMasterPassword(password, masterSalt);
 
         chrome.storage.local.set(
           {
             hasMasterPassword: true,
             masterPasswordHash: hash,
+            masterPasswordSalt: Array.from(masterSalt),
           },
           async () => {
             console.log("Master password hash saved locally");

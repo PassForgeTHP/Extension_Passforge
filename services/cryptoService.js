@@ -236,3 +236,54 @@ export async function importKey(jwk, extractable = false) {
     ['encrypt', 'decrypt']
   );
 }
+
+// ============================================================================
+// 7. MASTER PASSWORD HASHING FOR OFFLINE VERIFICATION
+// ============================================================================
+
+/**
+ * Hashes a master password for offline verification using PBKDF2
+ * @param {string} password - Master password
+ * @param {Uint8Array} salt - Salt for hashing
+ * @returns {Promise<string>} Base64 encoded hash
+ */
+export async function hashMasterPassword(password, salt) {
+  const passwordBuffer = new TextEncoder().encode(password);
+
+  const passwordKey = await crypto.subtle.importKey(
+    'raw',
+    passwordBuffer,
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+
+  const hashBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 600000,
+      hash: 'SHA-256'
+    },
+    passwordKey,
+    256 // 256 bits
+  );
+
+  // Convert to base64 for storage
+  const hashArray = new Uint8Array(hashBits);
+  const hashBase64 = btoa(String.fromCharCode(...hashArray));
+
+  return hashBase64;
+}
+
+/**
+ * Verifies a master password against a stored hash
+ * @param {string} password - Master password to verify
+ * @param {string} storedHash - Base64 encoded hash
+ * @param {Uint8Array} salt - Salt used for hashing
+ * @returns {Promise<boolean>} True if password matches
+ */
+export async function verifyMasterPassword(password, storedHash, salt) {
+  const computedHash = await hashMasterPassword(password, salt);
+  return computedHash === storedHash;
+}
