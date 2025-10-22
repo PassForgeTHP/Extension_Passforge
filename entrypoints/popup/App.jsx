@@ -8,6 +8,7 @@ import PasswordListCompact from './components/PasswordListCompact';
 import PasswordDetails from './components/PasswordDetails';
 import AddPasswordForm from './components/AddPasswordForm';
 import EditPasswordForm from './components/EditPasswordForm';
+import ChangeMasterPasswordView from './components/ChangeMasterPasswordView';
 import useVaultStore from '../../services/vaultStore';
 import { useBackgroundMessage } from './hooks/useBackgroundMessage';
 import './style.css';
@@ -24,6 +25,7 @@ function App() {
   const [editingPassword, setEditingPassword] = useState(null);
   const [activeVaultId, setActiveVaultId] = useState('personal');
   const [selectedPassword, setSelectedPassword] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   // Mock vaults - in real app, these would come from store
   const vaults = [
@@ -130,6 +132,7 @@ function App() {
           vaults={vaults}
           activeVaultId={activeVaultId}
           onVaultChange={setActiveVaultId}
+          onChangeMasterPassword={() => setShowChangePassword(true)}
           onLogout={handleLogout}
         />
       </Header>
@@ -181,6 +184,16 @@ function App() {
               updatePassword(editingPassword.id, data);
               setShowEditForm(false);
               setEditingPassword(null);
+            }}
+          />
+        )}
+
+        {showChangePassword && (
+          <ChangeMasterPasswordView
+            onCancel={() => setShowChangePassword(false)}
+            onComplete={() => {
+              setShowChangePassword(false);
+              alert("Master password successfully updated");
             }}
           />
         )}
