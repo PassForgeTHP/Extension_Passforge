@@ -26,40 +26,18 @@ function LoginView() {
     setError('');
 
     try {
-      chrome.storage.local.get(['masterPasswordHash', 'token'], async ({ masterPasswordHash, token }) => {
+      chrome.storage.local.get(['masterPasswordHash'], async ({ masterPasswordHash }) => {
         if (!masterPasswordHash) {
           setError("No master password set. Please set it up first.");
           setLoading(false);
           return;
         }
 
-        const isValidLocal = bcrypt.compareSync(masterPassword, masterPasswordHash);
-        if (!isValidLocal) {
+        const isValid = bcrypt.compareSync(masterPassword, masterPasswordHash);
+        if (!isValid) {
           setError("Invalid master password");
           setLoading(false);
           return;
-        }
-
-        if (token) {
-          try {
-            const res = await fetch("http://localhost:3000/api/master_password/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-              },
-              body: JSON.stringify({ user: { master_password: masterPassword } }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-              console.warn("API verification failed, continuing offline:", data.error);
-            } else {
-              console.log("Master password verified via API");
-            }
-          } catch (apiErr) {
-            console.warn("API verification error, continuing offline:", apiErr.message);
-          }
         }
 
         const [popupResult, backgroundResult] = await Promise.all([
