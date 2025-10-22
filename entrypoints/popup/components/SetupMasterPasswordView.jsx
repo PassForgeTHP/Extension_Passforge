@@ -111,25 +111,34 @@ function SetupMasterPasswordView({ onSetupComplete }) {
   };
 
   return (
-    <div>
-      <div>
+    <div className="login-container">
+      <div className="login-header">
+        <div className="logo-large">
+          <HiShieldCheck className="logo-icon-large" />
+        </div>
         <h1>Set up your Master Password</h1>
         <p>This password will protect your vault in the extension.</p>
       </div>
 
       <form className="login-form" onSubmit={handleSetup}>
-        <input
-          type="password"
-          placeholder="Enter master password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Confirm master password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
+        <div className="form-group">
+          <input
+            type="password"
+            placeholder="Enter master password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="master-password-input"
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="password"
+            placeholder="Confirm master password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className="master-password-input"
+          />
+        </div>
 
         {error && <div className="error-message">{error}</div>}
 
