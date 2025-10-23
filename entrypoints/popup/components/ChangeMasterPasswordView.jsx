@@ -44,6 +44,11 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       return;
     }
 
+    if (newPassword === currentPassword) {
+      setError("New password must be different from current password");
+      return;
+    }
+
     setLoading(true);
 
     try {
