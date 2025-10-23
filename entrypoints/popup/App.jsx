@@ -69,7 +69,6 @@ function App() {
         ["token", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt", "userId"],
         async ({ token, hasMasterPassword, masterPasswordHash, masterPasswordSalt, userId }) => {
           if (!token) {
-            console.log("No token found — user must log in.");
             setHasMasterPassword(false);
             return;
           }
@@ -86,7 +85,6 @@ function App() {
             const apiHasMasterPassword = !!data.has_master_password;
 
             if (!apiHasMasterPassword) {
-              console.log("No master password found on API — forcing setup mode.");
               await chrome.storage.local.remove([
                 "hasMasterPassword",
                 "masterPasswordHash",
@@ -98,20 +96,15 @@ function App() {
 
             // If API has a master password, ensure local state matches
             if (apiHasMasterPassword && !hasMasterPassword) {
-              console.log("API master password detected — syncing local storage.");
               await chrome.storage.local.set({ hasMasterPassword: true });
             }
 
             setHasMasterPassword(true);
           } catch (err) {
-            console.warn("Could not reach API (offline mode or request error).", err);
-
             // Offline fallback
             if (masterPasswordHash && masterPasswordSalt) {
-              console.log("Offline mode — local master password available.");
               setHasMasterPassword(true);
             } else {
-              console.log("No local master password — user must set up a new one.");
               setHasMasterPassword(false);
             }
           }
@@ -129,7 +122,6 @@ function App() {
         const { hasMasterPassword, masterPasswordHash, masterPasswordSalt } = result;
 
         if (hasMasterPassword && (!masterPasswordHash || !masterPasswordSalt)) {
-          console.warn("[App] Inconsistent local master password data — resetting setup.");
           chrome.storage.local.remove(["hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"], () => {
             setHasMasterPassword(false);
           });
