@@ -77,17 +77,27 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       }
 
       const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
-      const res = await fetch(`${API_URL}/api/master_password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          current_master_password: currentPassword,
-          user: { master_password: newPassword },
+
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+
+      // Race between fetch and timeout
+      const res = await Promise.race([
+        fetch(`${API_URL}/api/master_password`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            current_master_password: currentPassword,
+            user: { master_password: newPassword },
+          }),
         }),
-      });
+        timeoutPromise
+      ]);
 
       const data = await res.json();
 
@@ -128,7 +138,11 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       if (onComplete) onComplete();
 
     } catch (err) {
-      setError("Something went wrong while updating password");
+      if (err.message === 'Request timeout') {
+        setError("Request timed out. Please check your connection and try again.");
+      } else {
+        setError("Something went wrong while updating password");
+      }
       setLoading(false);
     }
   };
