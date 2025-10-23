@@ -81,8 +81,6 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
         return;
       }
 
-      console.log("Master password successfully updated on API");
-
       if (vault && vault.encryptedVault) {
         const { encryptedVault, iv, salt: oldSalt } = vault;
         const oldKey = await deriveKey(currentPassword, oldSalt, true);
@@ -98,7 +96,6 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
         });
 
         await saveVault();
-        console.log("Vault re-encrypted locally with new master password");
       }
 
       const newMasterSalt = generateSalt();
@@ -115,7 +112,6 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       if (onComplete) onComplete();
 
     } catch (err) {
-      console.error("Error updating master password:", err);
       setError("Something went wrong while updating password");
       setLoading(false);
     }
