@@ -60,7 +60,8 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
         return;
       }
 
-      const res = await fetch("http://localhost:3000/api/master_password", {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
+      const res = await fetch(`${API_URL}/api/master_password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
