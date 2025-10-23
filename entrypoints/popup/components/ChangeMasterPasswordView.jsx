@@ -28,6 +28,17 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       return;
     }
 
+    // Password complexity validation
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+      setError("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
