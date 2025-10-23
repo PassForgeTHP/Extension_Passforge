@@ -109,6 +109,14 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
 
       if (vault && vault.encryptedVault) {
         const { encryptedVault, iv, salt: oldSalt } = vault;
+
+        // Validate vault salt exists and is valid
+        if (!oldSalt || !(oldSalt instanceof Uint8Array) || oldSalt.length === 0) {
+          setError("Invalid vault data. Cannot re-encrypt vault.");
+          setLoading(false);
+          return;
+        }
+
         const oldKey = await deriveKey(currentPassword, oldSalt, true);
         const decryptedVault = await decryptData({ encrypted: encryptedVault, iv }, oldKey);
 
