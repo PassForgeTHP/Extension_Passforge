@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginView from './components/LoginView';
 import SetupMasterPasswordView from './components/SetupMasterPasswordView';
 import Header from './components/Header';
@@ -76,7 +76,8 @@ function App() {
 
           try {
             // Check the API first
-            const res = await fetch("http://localhost:3000/api/master_password", {
+            const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
+            const res = await fetch(`${API_URL}/api/master_password`, {
               headers: { Authorization: `Bearer ${token}` },
             });
 
