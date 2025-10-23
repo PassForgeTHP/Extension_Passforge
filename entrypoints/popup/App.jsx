@@ -61,48 +61,82 @@ function App() {
     return 0;
   });
 
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-   // ✅ Nouvelle logique hybride pour le master password
-  useEffect(() => {
+ useEffect(() => {
     const checkMasterPassword = async () => {
-      if (!chrome?.storage) return;
+      if (!chrome?.storage?.local) return;
 
-      chrome.storage.local.get(["token", "hasMasterPassword", "masterPasswordHash"], async ({ token, hasMasterPassword, masterPasswordHash }) => {
-        if (masterPasswordHash && hasMasterPassword) {
-          // console.log("Master password found locally (offline mode)");
-          setHasMasterPassword(true);
-          return;
+      chrome.storage.local.get(
+        ["token", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt", "userId"],
+        async ({ token, hasMasterPassword, masterPasswordHash, masterPasswordSalt, userId }) => {
+          if (!token) {
+            console.log("No token found — user must log in.");
+            setHasMasterPassword(false);
+            return;
+          }
+
+          try {
+            // Check the API first
+            const res = await fetch("http://localhost:3000/api/master_password", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) throw new Error(`API check failed: ${res.status}`);
+            const data = await res.json();
+            const apiHasMasterPassword = !!data.has_master_password;
+
+            if (!apiHasMasterPassword) {
+              console.log("No master password found on API — forcing setup mode.");
+              await chrome.storage.local.remove([
+                "hasMasterPassword",
+                "masterPasswordHash",
+                "masterPasswordSalt",
+              ]);
+              setHasMasterPassword(false);
+              return;
+            }
+
+            // If API has a master password, ensure local state matches
+            if (apiHasMasterPassword && !hasMasterPassword) {
+              console.log("API master password detected — syncing local storage.");
+              await chrome.storage.local.set({ hasMasterPassword: true });
+            }
+
+            setHasMasterPassword(true);
+          } catch (err) {
+            console.warn("Could not reach API (offline mode or request error).", err);
+
+            // Offline fallback
+            if (masterPasswordHash && masterPasswordSalt) {
+              console.log("Offline mode — local master password available.");
+              setHasMasterPassword(true);
+            } else {
+              console.log("No local master password — user must set up a new one.");
+              setHasMasterPassword(false);
+            }
+          }
         }
+      );
+    };
 
-        if (!token) {
-          console.log("⚠️ No token found and no local password — user must set one.");
-          setHasMasterPassword(false);
-          return;
-        }
+    checkMasterPassword();
+  }, []);
 
-        try {
-          const res = await fetch("http://localhost:3000/api/master_password", {
-            headers: { Authorization: `Bearer ${token}` },
+  // Local integrity check
+  useEffect(() => {
+    const verifyLocalMasterPassword = async () => {
+      chrome.storage.local.get(["hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"], (result) => {
+        const { hasMasterPassword, masterPasswordHash, masterPasswordSalt } = result;
+
+        if (hasMasterPassword && (!masterPasswordHash || !masterPasswordSalt)) {
+          console.warn("[App] Inconsistent local master password data — resetting setup.");
+          chrome.storage.local.remove(["hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"], () => {
+            setHasMasterPassword(false);
           });
-
-          const data = await res.json();
-          // console.log("API master password check:", data);
-
-          chrome.storage.local.set({ hasMasterPassword: data.has_master_password || false });
-          setHasMasterPassword(!!data.has_master_password);
-        } catch (err) {
-          console.error("Error checking master password from API:", err);
-          setHasMasterPassword(!!masterPasswordHash);
         }
       });
     };
 
-    checkMasterPassword();
+    verifyLocalMasterPassword();
   }, []);
 
   if (hasMasterPassword === null) {
@@ -124,6 +158,13 @@ function App() {
       </div>
     );
   }
+
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
 
   return (
     <div className="app">

@@ -92,38 +92,38 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
       const oldVault = vault || useVaultStore.getState().vault;
 
       if (oldVault && oldVault.encryptedVault) {
-        const { salt, iv, encryptedVault } = oldVault;
-        const oldKey = await deriveKey(currentPassword, salt, true);
+        const { salt: vaultSalt, iv, encryptedVault } = oldVault;
+        const oldKey = await deriveKey(currentPassword, vaultSalt, true);
         const decryptedVault = await decryptData(
           { encrypted: encryptedVault, iv },
           oldKey
         );
 
-        const newSalt = generateSalt();
-        const newKey = await deriveKey(newPassword, newSalt, true);
+        const newVaultSalt = generateSalt();
+        const newVaultKey = await deriveKey(newPassword, newVaultSalt, true);
         const { encrypted: newEncryptedVault, iv: newIv } = await encryptData(
           decryptedVault,
-          newKey
+          newVaultKey
         );
 
         useVaultStore.setState({
-          masterKey: newKey,
-          salt: newSalt,
+          masterKey: newVaultKey,
+          salt: newVaultSalt,
           iv: newIv,
-          vault: { encryptedVault: newEncryptedVault, salt: newSalt, iv: newIv },
+          vault: { encryptedVault: newEncryptedVault, salt: newVaultSalt, iv: newIv },
         });
 
         await saveVault();
-        console.log("🔐 Vault re-encrypted locally with new master password");
+        console.log("Vault re-encrypted locally with new master password");
       }
 
-      const newSaltForHash = generateSalt();
-      const newHash = await hashMasterPassword(newPassword, newSaltForHash);
+      const hashSalt = generateSalt();
+      const newMasterPasswordHash = await hashMasterPassword(newPassword, hashSalt);
 
       await chrome.storage.local.set({
         hasMasterPassword: true,
-        masterPasswordHash: newHash,
-        masterPasswordSalt: Array.from(newSaltForHash),
+        masterPasswordHash: newMasterPasswordHash,
+        masterPasswordSalt: hashSalt,
       });
 
       setSuccess(true);
