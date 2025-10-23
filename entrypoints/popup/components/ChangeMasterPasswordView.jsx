@@ -18,7 +18,7 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
     setError("");
     setSuccess(false);
 
-     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+    if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       setError("All fields are required");
       return;
     }
@@ -35,16 +35,15 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
 
     setLoading(true);
 
-      try {
-      const { masterPasswordHash, masterPasswordSalt, token } =
-        await chrome.storage.local.get([
-          "masterPasswordHash",
-          "masterPasswordSalt",
-          "token",
-        ]);
+    try {
+      const { token, masterPasswordHash, masterPasswordSalt } = await chrome.storage.local.get([
+        "token",
+        "masterPasswordHash",
+        "masterPasswordSalt",
+      ]);
 
-      if (!masterPasswordHash || !masterPasswordSalt) {
-        setError("No master password found locally.");
+      if (!token) {
+        setError("You must be logged in to update master password");
         setLoading(false);
         return;
       }
@@ -57,12 +56,6 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
 
       if (!isValid) {
         setError("Invalid current master password");
-        setLoading(false);
-        return;
-      }
-
-      if (!token) {
-        setError("You must be logged in to update master password");
         setLoading(false);
         return;
       }
@@ -89,48 +82,37 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
 
       console.log("Master password successfully updated on API");
 
-      const oldVault = vault || useVaultStore.getState().vault;
+      if (vault && vault.encryptedVault) {
+        const { encryptedVault, iv, salt: oldSalt } = vault;
+        const oldKey = await deriveKey(currentPassword, oldSalt, true);
+        const decryptedVault = await decryptData({ encrypted: encryptedVault, iv }, oldKey);
 
-      if (oldVault && oldVault.encryptedVault) {
-        const { salt: vaultSalt, iv, encryptedVault } = oldVault;
-        const oldKey = await deriveKey(currentPassword, vaultSalt, true);
-        const decryptedVault = await decryptData(
-          { encrypted: encryptedVault, iv },
-          oldKey
-        );
-
-        const newVaultSalt = generateSalt();
-        const newVaultKey = await deriveKey(newPassword, newVaultSalt, true);
-        const { encrypted: newEncryptedVault, iv: newIv } = await encryptData(
-          decryptedVault,
-          newVaultKey
-        );
+        const newSalt = generateSalt();
+        const newKey = await deriveKey(newPassword, newSalt, true);
+        const { encrypted, iv: newIv } = await encryptData(decryptedVault, newKey);
 
         useVaultStore.setState({
-          masterKey: newVaultKey,
-          salt: newVaultSalt,
-          iv: newIv,
-          vault: { encryptedVault: newEncryptedVault, salt: newVaultSalt, iv: newIv },
+          vault: { encryptedVault: encrypted, iv: newIv, salt: newSalt },
+          isLocked: false,
         });
 
         await saveVault();
         console.log("Vault re-encrypted locally with new master password");
       }
 
-      const hashSalt = generateSalt();
-      const newMasterPasswordHash = await hashMasterPassword(newPassword, hashSalt);
+      const newMasterSalt = generateSalt();
+      const newMasterHash = await hashMasterPassword(newPassword, newMasterSalt);
 
       await chrome.storage.local.set({
         hasMasterPassword: true,
-        masterPasswordHash: newMasterPasswordHash,
-        masterPasswordSalt: hashSalt,
+        masterPasswordHash: newMasterHash,
+        masterPasswordSalt: Array.from(newMasterSalt),
       });
 
       setSuccess(true);
       setLoading(false);
-      console.log("Master password successfully updated locally");
-
       if (onComplete) onComplete();
+
     } catch (err) {
       console.error("Error updating master password:", err);
       setError("Something went wrong while updating password");
