@@ -26,7 +26,7 @@ import './style.css';
  * 5. Main App - Password management interface
  */
 function App() {
-  const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
+  const { isLocked, isAutoLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
   const { lockVault: lockBackground } = useBackgroundMessage();
 
   // Onboarding state
@@ -220,8 +220,9 @@ function App() {
     );
   }
 
-  // Step 4: Login - Unlock vault with Master Password (when vault is locked)
-  if (isLocked) {
+  // Step 4: Login - Unlock vault with Master Password (when vault is locked manually)
+  // Skip login screen when auto-locked to avoid popup spam
+  if (isLocked && !isAutoLocked) {
     return (
       <div className="app">
         <LoginView />

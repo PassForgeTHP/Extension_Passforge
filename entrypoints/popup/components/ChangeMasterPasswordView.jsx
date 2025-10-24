@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { HiLockClosed } from "react-icons/hi";
+import { HiLockClosed, HiRefresh, HiEye, HiEyeOff } from "react-icons/hi";
 import { generateSalt, deriveKey, encryptData, decryptData, hashMasterPassword, verifyMasterPassword } from "../../../services/cryptoService";
+import { generatePassword, calculatePasswordStrength } from "../../../services/passwordGenerator";
 import useVaultStore from "../../../services/vaultStore";
 
 function ChangeMasterPasswordView({ onComplete, onCancel }) {
@@ -12,6 +13,30 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(null);
+
+  // Update password strength when new password changes
+  const handleNewPasswordChange = (value) => {
+    setNewPassword(value);
+    setPasswordStrength(calculatePasswordStrength(value));
+  };
+
+  // Generate a secure password that meets requirements
+  const generateSecurePassword = () => {
+    const password = generatePassword({
+      length: 16,
+      lowercase: true,
+      uppercase: true,
+      numbers: true,
+      symbols: true
+    });
+    setNewPassword(password);
+    setConfirmPassword(password); // Also set confirm field
+    setPasswordStrength(calculatePasswordStrength(password));
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -157,26 +182,94 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
 
   return (
     <div>
-      <h2>Change Master Password</h2>
+      <h2>🔐 Secure Your Vault</h2>
+      <p className="form-description">
+        Change your master password to keep your vault secure. Your new password must be strong and unique.
+      </p>
+
       <form className="login-form" onSubmit={handleChangePassword}>
-        <input
-          type="password"
-          placeholder="Current password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="New password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Confirm new password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
+        {/* Current Password */}
+        <div className="password-input-group">
+          <input
+            type={showCurrentPassword ? "text" : "password"}
+            placeholder="Current master password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+            title={showCurrentPassword ? "Hide password" : "Show password"}
+          >
+            {showCurrentPassword ? <HiEyeOff /> : <HiEye />}
+          </button>
+        </div>
+
+        {/* New Password */}
+        <div className="password-input-group">
+          <input
+            type={showNewPassword ? "text" : "password"}
+            placeholder="New master password (min 8 characters)"
+            value={newPassword}
+            onChange={(e) => handleNewPasswordChange(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowNewPassword(!showNewPassword)}
+            title={showNewPassword ? "Hide password" : "Show password"}
+          >
+            {showNewPassword ? <HiEyeOff /> : <HiEye />}
+          </button>
+        </div>
+
+        {/* Password Strength Indicator */}
+        {passwordStrength && newPassword && (
+          <div className="password-strength">
+            <div className="strength-bar">
+              <div
+                className={`strength-fill strength-${passwordStrength.level}`}
+                style={{ width: `${passwordStrength.percentage}%` }}
+              ></div>
+            </div>
+            <span className="strength-text">
+              Strength: {passwordStrength.level.charAt(0).toUpperCase() + passwordStrength.level.slice(1)}
+            </span>
+          </div>
+        )}
+
+        {/* Generate Password Button */}
+        <button
+          type="button"
+          className="generate-password-btn"
+          onClick={generateSecurePassword}
+          title="Generate a secure password"
+        >
+          <HiRefresh />
+          Generate Secure Password
+        </button>
+
+        {/* Confirm Password */}
+        <div className="password-input-group">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            title={showConfirmPassword ? "Hide password" : "Show password"}
+          >
+            {showConfirmPassword ? <HiEyeOff /> : <HiEye />}
+          </button>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">Password changed successfully</div>}

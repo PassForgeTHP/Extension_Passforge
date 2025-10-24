@@ -101,6 +101,7 @@ const useVaultStore = create((set, get) => ({
         // Set state for unlocked empty vault
         set({
           isLocked: false,
+          isAutoLocked: false, // Reset auto-lock state when manually unlocking
           passwords: [],
           masterKey: key,
           salt: newSalt,
@@ -135,6 +136,7 @@ const useVaultStore = create((set, get) => ({
       // Load passwords into RAM
       set({
         isLocked: false,
+        isAutoLocked: false, // Reset auto-lock state when manually unlocking
         passwords: vaultData.passwords || [],
         masterKey: key,
         salt: storedVault.salt,
@@ -166,11 +168,34 @@ const useVaultStore = create((set, get) => ({
     // Clear RAM
     set({
       isLocked: true,
+      isAutoLocked: false, // Manual lock, not auto-lock
       passwords: [],
       masterKey: null,
       salt: null,
       iv: null
     })
+  },
+
+  /**
+   * Auto-lock the vault (called by background script)
+   */
+  autoLock: async () => {
+    const { isLocked } = get();
+    if (!isLocked) {
+      console.log('[VaultStore] Auto-locking vault');
+      // Clear session storage
+      await clearSession();
+
+      // Clear RAM and mark as auto-locked
+      set({
+        isLocked: true,
+        isAutoLocked: true, // This lock came from auto-lock
+        passwords: [],
+        masterKey: null,
+        salt: null,
+        iv: null
+      });
+    }
   },
 
   /**

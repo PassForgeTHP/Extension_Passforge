@@ -68,7 +68,7 @@ export default defineBackground({
         console.log('[Background] Auto-lock timer triggered');
         const store = useVaultStore.getState();
         if (!store.isLocked) {
-          await store.lock();
+          await store.autoLock();
           console.log('[Background] Vault auto-locked after', AUTO_LOCK_MINUTES, 'minutes');
         }
       }
