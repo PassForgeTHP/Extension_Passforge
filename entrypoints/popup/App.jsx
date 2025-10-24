@@ -59,6 +59,14 @@ function App() {
     ]);
   };
 
+  const handleLock = async () => {
+    // Just lock the vault without logging out
+    await Promise.all([
+      lock(),
+      lockBackground()
+    ]);
+  };
+
   // Filter by vault - for now show all since passwords don't have vault_id yet
   let vaultFilteredPasswords = passwords;
   // TODO: Filter by vault when vault system is fully implemented
@@ -239,6 +247,7 @@ function App() {
           onVaultChange={setActiveVaultId}
           onChangeMasterPassword={() => setShowChangePassword(true)}
           onLogout={handleLogout}
+          onLock={handleLock}
         />
       </Header>
 
