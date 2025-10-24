@@ -157,13 +157,13 @@ function ChangeMasterPasswordView({ onComplete, onCancel }) {
         await saveVault();
       }
 
-      const newMasterSalt = generateSalt();
-      const newMasterHash = await hashMasterPassword(newPassword, newMasterSalt);
+      // Keep the same salt, just update the hash with the new password
+      const newMasterHash = await hashMasterPassword(newPassword, new Uint8Array(masterPasswordSalt));
 
       await chrome.storage.local.set({
         hasMasterPassword: true,
         masterPasswordHash: newMasterHash,
-        masterPasswordSalt: Array.from(newMasterSalt),
+        masterPasswordSalt: masterPasswordSalt, // Keep the same salt
       });
 
       setSuccess(true);
