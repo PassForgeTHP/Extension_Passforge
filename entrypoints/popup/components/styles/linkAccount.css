@@ -1,0 +1,267 @@
+/* ============================================================================
+   Link Account View Styles
+   ============================================================================
+
+   Styles for the account linking screen where users paste their JWT token
+   from the web app to connect their extension to their account.
+   ============================================================================ */
+
+.link-account-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 32px 24px;
+  overflow-y: auto;
+}
+
+/* Header section */
+.link-account-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.link-account-header .logo-large {
+  margin-bottom: 16px;
+}
+
+.link-account-header .logo-icon-large {
+  font-size: 64px;
+  color: var(--base-red, #af0024);
+}
+
+.link-account-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: var(--dark, #1a1720);
+}
+
+.link-account-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Success screen after linking */
+.success-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 72px;
+  color: #4caf50;
+  margin-bottom: 16px;
+  animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.success-screen p {
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dark, #1a1720);
+}
+
+.success-subtext {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #666 !important;
+}
+
+/* Form */
+.link-account-form {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dark, #1a1720);
+}
+
+/* Token textarea */
+.token-textarea {
+  width: 100%;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  background-color: #f9f9f9;
+  transition: border-color 0.2s ease;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.token-textarea:focus {
+  outline: none;
+  border-color: var(--base-red, #af0024);
+  background-color: white;
+}
+
+.token-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.token-textarea::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+/* Helper text below input */
+.helper-text {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.helper-text strong {
+  color: var(--base-red, #af0024);
+}
+
+/* Link button */
+.btn-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: var(--gradient-dark, linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-link:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn-link:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-link:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-link svg {
+  font-size: 20px;
+}
+
+/* Error message */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+  color: #c62828;
+  font-size: 14px;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.error-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* Instructions box */
+.instructions-box {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.instructions-box h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--dark, #1a1720);
+}
+
+.instructions-box ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions-box li {
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #555;
+}
+
+.instructions-box li:last-child {
+  margin-bottom: 0;
+}
+
+.instructions-box strong {
+  color: var(--base-red, #af0024);
+}
+
+/* Spinner animation */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Scrollbar styling */
+.link-account-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.link-account-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.link-account-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.link-account-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
