@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { HiMenu, HiX, HiPlus, HiTrash, HiLogout, HiCog, HiFolder } from 'react-icons/hi';
+import { HiMenu, HiX, HiPlus, HiTrash, HiLogout, HiCog, HiFolder, HiLockClosed } from 'react-icons/hi';
 
-function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout }) {
+function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onChangeMasterPassword }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const displayVaults = vaults.length === 0 ? [
@@ -77,7 +77,7 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout }) {
             <div className="burger-separator"></div>
 
             <div className="burger-section">
-              <button
+              {/* <button
                 className="burger-menu-item"
                 onClick={() => {
                   console.log('Password management - feature coming soon');
@@ -87,12 +87,12 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout }) {
               >
                 <HiFolder className="menu-item-icon" />
                 <span>Password Management</span>
-              </button>
+              </button> */}
 
               <button
                 className="burger-menu-item"
                 onClick={() => {
-                  window.open('https://passforge.com/settings', '_blank');
+                  window.open('pass-forge-en.netlify.app/', '_blank');
                   setIsOpen(false);
                 }}
                 title="Settings"
@@ -100,6 +100,19 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout }) {
                 <HiCog className="menu-item-icon" />
                 <span>Settings</span>
               </button>
+
+              <button
+                className="burger-menu-item"
+                onClick={() => {
+                  onChangeMasterPassword();
+                  setIsOpen(false);
+                }}
+                title="Change Master Password"
+              >
+                <HiLockClosed className="menu-item-icon" />
+                <span>Change Master Password</span>
+              </button>
+
 
               <button
                 className="burger-menu-item logout"

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginView from './components/LoginView';
 import SetupMasterPasswordView from './components/SetupMasterPasswordView';
 import Header from './components/Header';
@@ -8,6 +8,7 @@ import PasswordListCompact from './components/PasswordListCompact';
 import PasswordDetails from './components/PasswordDetails';
 import AddPasswordForm from './components/AddPasswordForm';
 import EditPasswordForm from './components/EditPasswordForm';
+import ChangeMasterPasswordView from './components/ChangeMasterPasswordView';
 import useVaultStore from '../../services/vaultStore';
 import { useBackgroundMessage } from './hooks/useBackgroundMessage';
 import './style.css';
@@ -24,6 +25,7 @@ function App() {
   const [editingPassword, setEditingPassword] = useState(null);
   const [activeVaultId, setActiveVaultId] = useState('personal');
   const [selectedPassword, setSelectedPassword] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   // Mock vaults - in real app, these would come from store
   const vaults = [
@@ -59,48 +61,75 @@ function App() {
     return 0;
   });
 
-  const copyToClipboard = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-   // ✅ Nouvelle logique hybride pour le master password
-  useEffect(() => {
+ useEffect(() => {
     const checkMasterPassword = async () => {
-      if (!chrome?.storage) return;
+      if (!chrome?.storage?.local) return;
 
-      chrome.storage.local.get(["token", "hasMasterPassword", "masterPasswordHash"], async ({ token, hasMasterPassword, masterPasswordHash }) => {
-        if (masterPasswordHash && hasMasterPassword) {
-          // console.log("Master password found locally (offline mode)");
-          setHasMasterPassword(true);
-          return;
+      chrome.storage.local.get(
+        ["token", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt", "userId"],
+        async ({ token, hasMasterPassword, masterPasswordHash, masterPasswordSalt, userId }) => {
+          if (!token) {
+            setHasMasterPassword(false);
+            return;
+          }
+
+          try {
+            // Check the API first
+            const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
+            const res = await fetch(`${API_URL}/api/master_password`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) throw new Error(`API check failed: ${res.status}`);
+            const data = await res.json();
+            const apiHasMasterPassword = !!data.has_master_password;
+
+            if (!apiHasMasterPassword) {
+              await chrome.storage.local.remove([
+                "hasMasterPassword",
+                "masterPasswordHash",
+                "masterPasswordSalt",
+              ]);
+              setHasMasterPassword(false);
+              return;
+            }
+
+            // If API has a master password, ensure local state matches
+            if (apiHasMasterPassword && !hasMasterPassword) {
+              await chrome.storage.local.set({ hasMasterPassword: true });
+            }
+
+            setHasMasterPassword(true);
+          } catch (err) {
+            // Offline fallback
+            if (masterPasswordHash && masterPasswordSalt) {
+              setHasMasterPassword(true);
+            } else {
+              setHasMasterPassword(false);
+            }
+          }
         }
+      );
+    };
 
-        if (!token) {
-          console.log("⚠️ No token found and no local password — user must set one.");
-          setHasMasterPassword(false);
-          return;
-        }
+    checkMasterPassword();
+  }, []);
 
-        try {
-          const res = await fetch("http://localhost:3000/api/master_password", {
-            headers: { Authorization: `Bearer ${token}` },
+  // Local integrity check
+  useEffect(() => {
+    const verifyLocalMasterPassword = async () => {
+      chrome.storage.local.get(["hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"], (result) => {
+        const { hasMasterPassword, masterPasswordHash, masterPasswordSalt } = result;
+
+        if (hasMasterPassword && (!masterPasswordHash || !masterPasswordSalt)) {
+          chrome.storage.local.remove(["hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"], () => {
+            setHasMasterPassword(false);
           });
-
-          const data = await res.json();
-          // console.log("API master password check:", data);
-
-          chrome.storage.local.set({ hasMasterPassword: data.has_master_password || false });
-          setHasMasterPassword(!!data.has_master_password);
-        } catch (err) {
-          console.error("Error checking master password from API:", err);
-          setHasMasterPassword(!!masterPasswordHash);
         }
       });
     };
 
-    checkMasterPassword();
+    verifyLocalMasterPassword();
   }, []);
 
   if (hasMasterPassword === null) {
@@ -123,6 +152,13 @@ function App() {
     );
   }
 
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+
   return (
     <div className="app">
       <Header onAdd={() => setShowAddForm(true)} itemCount={passwords.length}>
@@ -130,6 +166,7 @@ function App() {
           vaults={vaults}
           activeVaultId={activeVaultId}
           onVaultChange={setActiveVaultId}
+          onChangeMasterPassword={() => setShowChangePassword(true)}
           onLogout={handleLogout}
         />
       </Header>
@@ -181,6 +218,16 @@ function App() {
               updatePassword(editingPassword.id, data);
               setShowEditForm(false);
               setEditingPassword(null);
+            }}
+          />
+        )}
+
+        {showChangePassword && (
+          <ChangeMasterPasswordView
+            onCancel={() => setShowChangePassword(false)}
+            onComplete={() => {
+              setShowChangePassword(false);
+              alert("Master password successfully updated");
             }}
           />
         )}
