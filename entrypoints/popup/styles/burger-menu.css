@@ -43,7 +43,8 @@
   top: 0;
   left: 0;
   width: 280px;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
   background: var(--dark);
   border-right: 1px solid rgba(227, 211, 191, 0.3);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
@@ -241,6 +242,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Burger Menu Scrollable Content */
+.burger-menu-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Burger Menu Section */

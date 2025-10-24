@@ -75,7 +75,7 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
         <>
           <div className="burger-overlay" onClick={() => setIsOpen(false)} />
           <div className="burger-menu">
-            {/* Account Info Header */}
+            {/* Account Info Header - Fixed at top */}
             <div className="burger-account-header">
               <div className="account-info">
                 <HiShieldCheck className="account-icon" />
@@ -87,6 +87,9 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
             </div>
 
             <div className="burger-separator"></div>
+
+            {/* Scrollable Content */}
+            <div className="burger-menu-content">
 
             {/* Quick Actions */}
             <div className="burger-section">
@@ -193,6 +196,7 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
                 <span>Logout & Clear Data</span>
               </button>
             </div>
+            </div> {/* End burger-menu-content */}
           </div>
         </>
       )}
