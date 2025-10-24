@@ -14,6 +14,7 @@ import { saveSession, clearSession, getSession } from './sessionService.js'
 const useVaultStore = create((set, get) => ({
   // State
   isLocked: true,
+  isAutoLocked: false, // Whether the current lock state is due to auto-lock
   passwords: [],
   masterKey: null, // CryptoKey object stored in RAM while unlocked
   salt: null, // 32-byte salt for PBKDF2 key derivation

@@ -112,37 +112,9 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
                 <HiArrowRight className="menu-item-icon" />
                 <span>Switch Account</span>
               </button>
-            </div>
+             </div>
 
-            <div className="burger-separator"></div>
-
-            {/* Vaults Section */}
-            <div className="burger-section">
-              <nav className="burger-vaults-list">
-                {displayVaults.map((vault) => (
-                  <button
-                    key={vault.id}
-                    className={`burger-vault-item ${activeVaultId === vault.id ? 'active' : ''}`}
-                    onClick={() => {
-                      onVaultChange(vault.id);
-                      setIsOpen(false);
-                    }}
-                  >
-                    <div
-                      className="burger-vault-icon"
-                      style={{ backgroundColor: vault.color || '#af0024' }}
-                    >
-                      {getVaultIcon(vault.iconType)}
-                    </div>
-                    <span className="burger-vault-name">{vault.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            <div className="burger-separator"></div>
-
-            {/* Settings Section */}
+             {/* Settings Section */}
             <div className="burger-section">
               <h4 className="section-title">Settings</h4>
 
