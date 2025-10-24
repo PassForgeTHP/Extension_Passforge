@@ -28,8 +28,11 @@ function LoginView() {
     try {
       chrome.storage.local.get(['masterPasswordHash', 'masterPasswordSalt'], async ({ masterPasswordHash, masterPasswordSalt }) => {
         if (!masterPasswordHash || !masterPasswordSalt) {
-          setError("No master password set. Please set it up first.");
-          setLoading(false);
+          // Master password not found locally - clear storage and restart onboarding
+          // This ensures user goes through full flow: Link Account → Explainer → Setup MP
+          console.warn("Master password hash not found locally. Clearing storage and restarting onboarding...");
+          await chrome.storage.local.clear();
+          window.location.reload();
           return;
         }
 
