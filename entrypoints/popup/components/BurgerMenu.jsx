@@ -13,9 +13,7 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
   }, []);
 
   const displayVaults = vaults.length === 0 ? [
-    { id: 'personal', name: 'Personal', color: '#af0024', iconType: 'personal' },
-    { id: 'work', name: 'Work', color: '#77080e', iconType: 'work' },
-    { id: 'shared', name: 'Shared', color: '#2d5a27', iconType: 'shared' }
+    { id: 'personal', name: 'Personal', color: '#af0024', iconType: 'personal' }
   ] : vaults;
 
   // Get icon component based on type
@@ -117,20 +115,6 @@ function BurgerMenu({ vaults = [], activeVaultId, onVaultChange, onLogout, onCha
 
             {/* Vaults Section */}
             <div className="burger-section">
-              <div className="section-header">
-                <h4 className="section-title">Vaults</h4>
-                <button
-                  className="vault-add-btn-menu"
-                  onClick={() => {
-                    console.log('Create vault - feature coming soon');
-                    setIsOpen(false);
-                  }}
-                  title="Create vault"
-                >
-                  <HiPlus />
-                </button>
-              </div>
-
               <nav className="burger-vaults-list">
                 {displayVaults.map((vault) => (
                   <button
