@@ -107,7 +107,7 @@ function App() {
             // Check the API first
             const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
             const res = await fetch(`${API_URL}/api/master_password`, {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { Authorization: `Bearer ${token}` }
             });
 
             if (!res.ok) throw new Error(`API check failed: ${res.status}`);

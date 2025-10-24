@@ -27,6 +27,7 @@ function SetupMasterPasswordView({ onSetupComplete }) {
   const [recoveryKey, setRecoveryKey] = useState("");
   const [recoveryCopied, setRecoveryCopied] = useState(false);
   const [recoveryConfirmed, setRecoveryConfirmed] = useState(false);
+  const [showRecoveryKey, setShowRecoveryKey] = useState(false);
 
   const { saveVault } = useVaultStore.getState();
 
@@ -63,12 +64,6 @@ function SetupMasterPasswordView({ onSetupComplete }) {
   useEffect(() => {
     const strength = calculatePasswordStrength(password);
     setPasswordStrength(strength);
-
-    // Generate Recovery Key when password is strong enough
-    if (password.length >= 8 && !recoveryKey) {
-      const key = generateRecoveryKey();
-      setRecoveryKey(key);
-    }
   }, [password]);
 
   /**
@@ -103,21 +98,43 @@ function SetupMasterPasswordView({ onSetupComplete }) {
   const handleSetup = async (e) => {
     e.preventDefault();
 
-    // Validation: Password must be at least 8 characters
-    if (!password.trim() || password.length < 8) {
-      return setError("Password must be at least 8 characters");
+    // Step 1: Password Creation (before showing Recovery Key)
+    if (!showRecoveryKey) {
+      // Validation: Password must be at least 8 characters
+      if (!password.trim() || password.length < 8) {
+        return setError("Password must be at least 8 characters");
+      }
+
+      // Validation: Passwords must match
+      if (password !== confirm) {
+        return setError("Passwords do not match");
+      }
+
+      setError("");
+      setLoading(true);
+
+      // Generate Recovery Key
+      const key = generateRecoveryKey();
+      setRecoveryKey(key);
+
+      // Proceed with vault creation
+      await createVault(key);
+      return;
     }
 
-    // Validation: Passwords must match
-    if (password !== confirm) {
-      return setError("Passwords do not match");
-    }
-
-    // Validation: Must confirm Recovery Key saved
+    // Step 2: Recovery Key Confirmation (after vault created)
     if (!recoveryConfirmed) {
       return setError("Please confirm that you have saved your Recovery Key");
     }
 
+    // Complete setup
+    onSetupComplete();
+  };
+
+  /**
+   * Create the vault with Master Password and Recovery Key
+   */
+  const createVault = async (key) => {
     setError("");
     setLoading(true);
 
@@ -142,7 +159,7 @@ function SetupMasterPasswordView({ onSetupComplete }) {
           body: JSON.stringify({
             user: {
               master_password: password,
-              recovery_key: recoveryKey // Store Recovery Key server-side (encrypted)
+              recovery_key: key // Store Recovery Key server-side (encrypted)
             },
           }),
         });
@@ -201,7 +218,9 @@ function SetupMasterPasswordView({ onSetupComplete }) {
               await saveVault();
 
               console.log("Vault initialized and saved locally");
-              onSetupComplete();
+
+              // Show Recovery Key screen
+              setShowRecoveryKey(true);
               setLoading(false);
             } catch (err) {
               console.error("Error initializing vault:", err);
@@ -218,6 +237,102 @@ function SetupMasterPasswordView({ onSetupComplete }) {
     }
   };
 
+  // Step 2: Show Recovery Key (after vault creation)
+  if (showRecoveryKey) {
+    return (
+      <div className="setup-container">
+        <div className="setup-header">
+          <div className="logo-large">
+            <HiCheckCircle className="logo-icon-large" style={{ color: '#10b981' }} />
+          </div>
+          <h1>Vault Created Successfully!</h1>
+          <p>Save your Recovery Key in a secure location.</p>
+        </div>
+
+        <div className="recovery-key-section">
+          <div className="recovery-key-header">
+            <HiKey />
+            <h3>Your Recovery Key</h3>
+          </div>
+
+          <p className="recovery-key-description">
+            This Recovery Key can restore access to your vault if you forget your Master Password. Save it in a secure location (password manager, safe, etc.).
+          </p>
+
+          <div className="recovery-key-display">
+            {formatRecoveryKeyForDisplay(recoveryKey)}
+          </div>
+
+          <div className="recovery-key-actions">
+            <button
+              type="button"
+              onClick={handleCopyRecoveryKey}
+              className={`btn-recovery-action btn-copy-recovery ${recoveryCopied ? 'copied' : ''}`}
+            >
+              {recoveryCopied ? (
+                <>
+                  <HiCheckCircle />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <HiClipboard />
+                  Copy Key
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadRecoveryKey}
+              className="btn-recovery-action btn-download-recovery"
+            >
+              <HiDownload />
+              Download
+            </button>
+          </div>
+
+          <div className="recovery-confirmation">
+            <input
+              type="checkbox"
+              id="recovery-confirm"
+              checked={recoveryConfirmed}
+              onChange={(e) => setRecoveryConfirmed(e.target.checked)}
+            />
+            <label htmlFor="recovery-confirm">
+              <strong>I have saved my Recovery Key</strong> in a secure location and understand that it is the only way to recover my vault if I forget my Master Password.
+            </label>
+          </div>
+
+          {error && (
+            <div className="error-message">
+              <HiExclamationCircle className="error-icon" />
+              {error}
+            </div>
+          )}
+
+          <div className="warning-box">
+            <HiExclamationCircle />
+            <p>
+              <strong>Warning:</strong> Without your Recovery Key, your data cannot be recovered if you forget your Master Password.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSetup}
+            className="btn-unlock btn-create-password"
+            disabled={!recoveryConfirmed}
+          >
+            <HiLockClosed />
+            Complete Setup
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 1: Create Master Password
   return (
     <div className="setup-container">
       <div className="setup-header">
@@ -266,65 +381,6 @@ function SetupMasterPasswordView({ onSetupComplete }) {
           />
         </div>
 
-        {/* Recovery Key Section */}
-        {recoveryKey && password.length >= 8 && (
-          <div className="recovery-key-section">
-            <div className="recovery-key-header">
-              <HiKey />
-              <h3>Your Recovery Key</h3>
-            </div>
-
-            <p className="recovery-key-description">
-              Save this Recovery Key in a secure location. It can restore access to your vault if you forget your Master Password.
-            </p>
-
-            <div className="recovery-key-display">
-              {formatRecoveryKeyForDisplay(recoveryKey)}
-            </div>
-
-            <div className="recovery-key-actions">
-              <button
-                type="button"
-                onClick={handleCopyRecoveryKey}
-                className={`btn-recovery-action btn-copy-recovery ${recoveryCopied ? 'copied' : ''}`}
-              >
-                {recoveryCopied ? (
-                  <>
-                    <HiCheckCircle />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <HiClipboard />
-                    Copy Key
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadRecoveryKey}
-                className="btn-recovery-action btn-download-recovery"
-              >
-                <HiDownload />
-                Download
-              </button>
-            </div>
-
-            <div className="recovery-confirmation">
-              <input
-                type="checkbox"
-                id="recovery-confirm"
-                checked={recoveryConfirmed}
-                onChange={(e) => setRecoveryConfirmed(e.target.checked)}
-              />
-              <label htmlFor="recovery-confirm">
-                <strong>I have saved my Recovery Key</strong> in a secure location and understand that it is the only way to recover my vault if I forget my Master Password.
-              </label>
-            </div>
-          </div>
-        )}
-
         {/* Error Message */}
         {error && (
           <div className="error-message">
@@ -345,12 +401,12 @@ function SetupMasterPasswordView({ onSetupComplete }) {
         <button
           type="submit"
           className="btn-unlock btn-create-password"
-          disabled={loading || !recoveryConfirmed}
+          disabled={loading}
         >
           {loading ? (
             <>
               <span className="spinner"></span>
-              Creating...
+              Creating Vault...
             </>
           ) : (
             <>

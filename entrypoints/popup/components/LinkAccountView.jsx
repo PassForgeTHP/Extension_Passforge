@@ -42,6 +42,9 @@ function LinkAccountView({ onLinkComplete }) {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
 
+      console.log('🔑 [LINK ACCOUNT] Token to verify:', token.trim().substring(0, 50) + '...');
+      console.log('🔑 [LINK ACCOUNT] API URL:', API_URL);
+
       // Verify token by fetching user data
       const res = await fetch(`${API_URL}/member-data`, {
         headers: {
@@ -49,6 +52,9 @@ function LinkAccountView({ onLinkComplete }) {
           'Content-Type': 'application/json'
         }
       });
+
+      console.log('🔑 [LINK ACCOUNT] Response status:', res.status);
+      console.log('🔑 [LINK ACCOUNT] Response headers:', [...res.headers.entries()]);
 
       if (!res.ok) {
         if (res.status === 401) {
