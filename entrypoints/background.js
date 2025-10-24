@@ -12,19 +12,25 @@ import useVaultStore from '../services/vaultStore.js';
 
 export default defineBackground({
   main() {
-    console.log('PassForge background script loaded');
+    console.log('[DEBUG] PassForge background script loaded');
 
-    // Attempt to restore session when service worker starts
-    // This keeps the vault unlocked across service worker restarts
-    (async () => {
-      const store = useVaultStore.getState();
-      const result = await store.restoreFromSession();
-      if (result.success) {
-        console.log('[Background] Vault session restored');
-      } else {
-        console.log('[Background] No session to restore');
-      }
-    })();
+    try {
+      console.log('[DEBUG] Background script initializing...');
+
+      // Attempt to restore session when service worker starts
+      // This keeps the vault unlocked across service worker restarts
+      (async () => {
+        console.log('[DEBUG] Attempting to restore vault session');
+        const store = useVaultStore.getState();
+        console.log('[DEBUG] Vault store initialized in background');
+
+        const result = await store.restoreFromSession();
+        if (result.success) {
+          console.log('[DEBUG] [Background] Vault session restored successfully');
+        } else {
+          console.log('[DEBUG] [Background] No session to restore:', result.error);
+        }
+      })();
 
     // Listen for extension installation or update events
     // This is useful for initializing data or showing welcome screens
@@ -91,6 +97,10 @@ export default defineBackground({
         sendResponse({ success: true });
       }
     });
+
+    } catch (error) {
+      console.error('[DEBUG] Error in background script initialization:', error);
+    }
 
   },
 });

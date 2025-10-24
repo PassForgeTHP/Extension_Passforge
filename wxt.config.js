@@ -6,6 +6,11 @@ export default defineConfig({
   runner: {
     disabled: true, // Disable automatic browser opening
   },
+  dev: {
+    server: {
+      port: 5174, // Use port 5174 to avoid conflict with Rails
+    }
+  },
   manifest: {
     name: 'PassForge',
     description: 'Secure password management extension',
@@ -17,7 +22,7 @@ export default defineConfig({
     ],
     externally_connectable: {
       matches: [
-        'http://localhost:5173/*',
+        'http://localhost:5175/*',
         'https://pass-forge-en.netlify.app/*'
       ],
     },
