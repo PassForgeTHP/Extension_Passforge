@@ -3,7 +3,6 @@ import { HiShieldCheck, HiLockClosed, HiKey, HiClipboard, HiCheckCircle, HiDownl
 import useVaultStore from '../../../services/vaultStore'
 import { generateSalt, deriveKey, encryptData, hashMasterPassword } from '../../../services/cryptoService.js'
 import { generateRecoveryKey, downloadRecoveryKey, formatRecoveryKeyForDisplay } from '../../../services/recoveryKeyService.js'
-import './styles/setupMasterPassword.css';
 
 /**
  * SetupMasterPasswordView Component

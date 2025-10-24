@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoginView from './components/LoginView';
+import LinkAccountView from './components/LinkAccountView';
+import MasterPasswordExplainerView from './components/MasterPasswordExplainerView';
 import SetupMasterPasswordView from './components/SetupMasterPasswordView';
 import Header from './components/Header';
 import BurgerMenu from './components/BurgerMenu';
@@ -13,11 +15,26 @@ import useVaultStore from '../../services/vaultStore';
 import { useBackgroundMessage } from './hooks/useBackgroundMessage';
 import './style.css';
 
+/**
+ * App Component - Main Extension Entry Point
+ *
+ * Zero-Knowledge Onboarding Flow:
+ * 1. LinkAccountView - User pastes JWT token from web app
+ * 2. MasterPasswordExplainerView - Educational carousel about Zero-Knowledge
+ * 3. SetupMasterPasswordView - Create Master Password + Recovery Key
+ * 4. LoginView - Unlock vault with Master Password (when locked)
+ * 5. Main App - Password management interface
+ */
 function App() {
   const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
   const { lockVault: lockBackground } = useBackgroundMessage();
 
+  // Onboarding state
+  const [hasToken, setHasToken] = useState(null);
+  const [hasSeenExplainer, setHasSeenExplainer] = useState(null);
   const [hasMasterPassword, setHasMasterPassword] = useState(null);
+
+  // UI state
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -61,18 +78,31 @@ function App() {
     return 0;
   });
 
- useEffect(() => {
-    const checkMasterPassword = async () => {
+  /**
+   * Check onboarding status on mount
+   * Determines which screen to show in the onboarding flow
+   */
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
       if (!chrome?.storage?.local) return;
 
       chrome.storage.local.get(
-        ["token", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt", "userId"],
-        async ({ token, hasMasterPassword, masterPasswordHash, masterPasswordSalt, userId }) => {
+        ["token", "hasSeenExplainer", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"],
+        async ({ token, hasSeenExplainer, hasMasterPassword, masterPasswordHash, masterPasswordSalt }) => {
+          // Step 1: Check if token exists (account linked)
           if (!token) {
+            setHasToken(false);
+            setHasSeenExplainer(true); // Skip explainer if no token
             setHasMasterPassword(false);
             return;
           }
 
+          setHasToken(true);
+
+          // Step 2: Check if user has seen the explainer
+          setHasSeenExplainer(!!hasSeenExplainer);
+
+          // Step 3: Check if user has Master Password
           try {
             // Check the API first
             const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
@@ -112,7 +142,7 @@ function App() {
       );
     };
 
-    checkMasterPassword();
+    checkOnboardingStatus();
   }, []);
 
   // Local integrity check
@@ -132,18 +162,57 @@ function App() {
     verifyLocalMasterPassword();
   }, []);
 
-  if (hasMasterPassword === null) {
+  /**
+   * Onboarding Flow Render Logic
+   * Progressively reveals screens based on completion state
+   */
+
+  // Loading state - checking onboarding status
+  if (hasToken === null || hasSeenExplainer === null || hasMasterPassword === null) {
     return <div className="loading-screen">Loading...</div>;
   }
 
-  if (!hasMasterPassword) {
+  // Step 1: Link Account - User must paste JWT token from web app
+  if (!hasToken) {
     return (
       <div className="app">
-        <SetupMasterPasswordView onSetupComplete={() => setHasMasterPassword(true)} />
+        <LinkAccountView
+          onLinkComplete={() => {
+            setHasToken(true);
+            setHasSeenExplainer(false); // Show explainer after linking
+          }}
+        />
       </div>
     );
   }
 
+  // Step 2: Master Password Explainer - Educational carousel about Zero-Knowledge
+  if (!hasSeenExplainer) {
+    return (
+      <div className="app">
+        <MasterPasswordExplainerView
+          onComplete={() => {
+            // Mark explainer as seen
+            chrome.storage.local.set({ hasSeenExplainer: true });
+            setHasSeenExplainer(true);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Step 3: Setup Master Password - Create Master Password + Recovery Key
+  if (!hasMasterPassword) {
+    return (
+      <div className="app">
+        <SetupMasterPasswordView
+          onSetupComplete={() => setHasMasterPassword(true)}
+        />
+      </div>
+    );
+  }
+
+  // Step 4: Login - Unlock vault with Master Password (when vault is locked)
   if (isLocked) {
     return (
       <div className="app">
@@ -151,6 +220,8 @@ function App() {
       </div>
     );
   }
+
+  // Step 5: Main App - Password management interface
 
   const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
