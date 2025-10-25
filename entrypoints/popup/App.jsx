@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoginView from './components/LoginView';
+import LinkAccountView from './components/LinkAccountView';
+import MasterPasswordExplainerView from './components/MasterPasswordExplainerView';
 import SetupMasterPasswordView from './components/SetupMasterPasswordView';
 import Header from './components/Header';
 import BurgerMenu from './components/BurgerMenu';
@@ -13,11 +15,30 @@ import useVaultStore from '../../services/vaultStore';
 import { useBackgroundMessage } from './hooks/useBackgroundMessage';
 import './style.css';
 
+/**
+ * App Component - Main Extension Entry Point
+ *
+ * Zero-Knowledge Onboarding Flow:
+ * 1. LinkAccountView - User pastes JWT token from web app
+ * 2. MasterPasswordExplainerView - Educational carousel about Zero-Knowledge
+ * 3. SetupMasterPasswordView - Create Master Password + Recovery Key
+ * 4. LoginView - Unlock vault with Master Password (when locked)
+ * 5. Main App - Password management interface
+ */
 function App() {
-  const { isLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
+  console.log('[DEBUG] App component rendering started');
+
+  const { isLocked, isAutoLocked, passwords, deletePassword, addPassword, updatePassword, lock } = useVaultStore();
   const { lockVault: lockBackground } = useBackgroundMessage();
 
+  console.log('[DEBUG] Vault store initialized:', { isLocked, isAutoLocked, passwordsCount: passwords.length });
+
+  // Onboarding state
+  const [hasToken, setHasToken] = useState(null);
+  const [hasSeenExplainer, setHasSeenExplainer] = useState(null);
   const [hasMasterPassword, setHasMasterPassword] = useState(null);
+
+  // UI state
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -36,6 +57,14 @@ function App() {
 
   const handleLogout = async () => {
     // Lock both popup store AND background store
+    await Promise.all([
+      lock(),
+      lockBackground()
+    ]);
+  };
+
+  const handleLock = async () => {
+    // Just lock the vault without logging out
     await Promise.all([
       lock(),
       lockBackground()
@@ -61,59 +90,130 @@ function App() {
     return 0;
   });
 
- useEffect(() => {
-    const checkMasterPassword = async () => {
-      if (!chrome?.storage?.local) return;
+  /**
+    * Check onboarding status on mount
+    * Determines which screen to show in the onboarding flow
+    */
+   useEffect(() => {
+     console.log('[DEBUG] useEffect for onboarding check triggered');
 
-      chrome.storage.local.get(
-        ["token", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt", "userId"],
-        async ({ token, hasMasterPassword, masterPasswordHash, masterPasswordSalt, userId }) => {
-          if (!token) {
-            setHasMasterPassword(false);
-            return;
-          }
+     const checkOnboardingStatus = async () => {
+       console.log('[DEBUG] Starting onboarding status check');
 
-          try {
-            // Check the API first
-            const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
-            const res = await fetch(`${API_URL}/api/master_password`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+       try {
+         console.log('[DEBUG] Checking Chrome API availability:', { chrome: !!chrome, storage: !!chrome?.storage, local: !!chrome?.storage?.local });
 
-            if (!res.ok) throw new Error(`API check failed: ${res.status}`);
-            const data = await res.json();
-            const apiHasMasterPassword = !!data.has_master_password;
+         if (!chrome?.storage?.local) {
+           console.error('[DEBUG] Chrome storage API not available');
+           setHasToken(false);
+           setHasSeenExplainer(true);
+           setHasMasterPassword(false);
+           return;
+         }
 
-            if (!apiHasMasterPassword) {
-              await chrome.storage.local.remove([
-                "hasMasterPassword",
-                "masterPasswordHash",
-                "masterPasswordSalt",
-              ]);
-              setHasMasterPassword(false);
-              return;
-            }
+         console.log('[DEBUG] Chrome storage API available, getting data...');
 
-            // If API has a master password, ensure local state matches
-            if (apiHasMasterPassword && !hasMasterPassword) {
-              await chrome.storage.local.set({ hasMasterPassword: true });
-            }
+         chrome.storage.local.get(
+           ["token", "hasSeenExplainer", "hasMasterPassword", "masterPasswordHash", "masterPasswordSalt"],
+           async ({ token, hasSeenExplainer, hasMasterPassword, masterPasswordHash, masterPasswordSalt }) => {
+             console.log('[DEBUG] Chrome storage data retrieved:', {
+               hasToken: !!token,
+               hasSeenExplainer: !!hasSeenExplainer,
+               hasMasterPassword: !!hasMasterPassword,
+               hasHash: !!masterPasswordHash,
+               hasSalt: !!masterPasswordSalt
+             });
 
-            setHasMasterPassword(true);
-          } catch (err) {
-            // Offline fallback
-            if (masterPasswordHash && masterPasswordSalt) {
-              setHasMasterPassword(true);
-            } else {
-              setHasMasterPassword(false);
-            }
-          }
-        }
-      );
-    };
+             try {
+               // Step 1: Check if token exists (account linked)
+               if (!token) {
+                 console.log('[DEBUG] No token found, setting onboarding defaults');
+                 setHasToken(false);
+                 setHasSeenExplainer(true); // Skip explainer if no token
+                 setHasMasterPassword(false);
+                 return;
+               }
 
-    checkMasterPassword();
-  }, []);
+               console.log('[DEBUG] Token found, proceeding with onboarding check');
+               setHasToken(true);
+
+               // Step 2: Check if user has seen the explainer
+               setHasSeenExplainer(!!hasSeenExplainer);
+               console.log('[DEBUG] Explainer status:', !!hasSeenExplainer);
+
+               // Step 3: Check if user has Master Password
+               try {
+                 // Check the API first
+                 const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
+                 console.log('[DEBUG] Checking API for master password at:', API_URL);
+
+                 const res = await fetch(`${API_URL}/api/master_password`, {
+                   headers: { Authorization: `Bearer ${token}` }
+                 });
+
+                 console.log('[DEBUG] API response status:', res.status);
+
+                 if (!res.ok) {
+                   console.error('[DEBUG] API check failed with status:', res.status);
+                   throw new Error(`API check failed: ${res.status}`);
+                 }
+
+                 const data = await res.json();
+                 console.log('[DEBUG] API response data:', data);
+
+                 const apiHasMasterPassword = !!data.has_master_password;
+                 console.log('[DEBUG] API has master password:', apiHasMasterPassword);
+
+                 if (!apiHasMasterPassword) {
+                   console.log('[DEBUG] API says no master password, clearing local data');
+                   await chrome.storage.local.remove([
+                     "hasMasterPassword",
+                     "masterPasswordHash",
+                     "masterPasswordSalt",
+                   ]);
+                   setHasMasterPassword(false);
+                   return;
+                 }
+
+                 // If API has a master password, ensure local state matches
+                 if (apiHasMasterPassword && !hasMasterPassword) {
+                   console.log('[DEBUG] Syncing local state with API');
+                   await chrome.storage.local.set({ hasMasterPassword: true });
+                 }
+
+                 setHasMasterPassword(true);
+                 console.log('[DEBUG] Master password check completed successfully');
+               } catch (err) {
+                 console.warn('[DEBUG] API check failed, using offline fallback:', err.message);
+                 // Offline fallback
+                 if (masterPasswordHash && masterPasswordSalt) {
+                   console.log('[DEBUG] Using offline fallback - master password exists locally');
+                   setHasMasterPassword(true);
+                 } else {
+                   console.log('[DEBUG] No local master password either');
+                   setHasMasterPassword(false);
+                 }
+               }
+             } catch (error) {
+               console.error('[DEBUG] Error in onboarding check:', error);
+               // Set defaults on error
+               setHasToken(false);
+               setHasSeenExplainer(true);
+               setHasMasterPassword(false);
+             }
+           }
+         );
+       } catch (error) {
+         console.error('[DEBUG] Error accessing chrome storage:', error);
+         // Set defaults if chrome storage fails
+         setHasToken(false);
+         setHasSeenExplainer(true);
+         setHasMasterPassword(false);
+       }
+     };
+
+     checkOnboardingStatus();
+   }, []);
 
   // Local integrity check
   useEffect(() => {
@@ -132,25 +232,86 @@ function App() {
     verifyLocalMasterPassword();
   }, []);
 
-  if (hasMasterPassword === null) {
-    return <div className="loading-screen">Loading...</div>;
+  /**
+    * Onboarding Flow Render Logic
+    * Progressively reveals screens based on completion state
+    */
+
+  console.log('[DEBUG] Render logic - current state:', {
+    hasToken,
+    hasSeenExplainer,
+    hasMasterPassword,
+    isLocked,
+    isAutoLocked
+  });
+
+  // Loading state - checking onboarding status
+  if (hasToken === null || hasSeenExplainer === null || hasMasterPassword === null) {
+    console.log('[DEBUG] Rendering loading screen');
+    return <div className="loading-screen" style={{ padding: '20px', backgroundColor: '#333', color: 'white' }}>Loading...</div>;
   }
 
-  if (!hasMasterPassword) {
+  // Step 1: Link Account - User must paste JWT token from web app
+  if (!hasToken) {
+    console.log('[DEBUG] Rendering LinkAccountView');
     return (
       <div className="app">
-        <SetupMasterPasswordView onSetupComplete={() => setHasMasterPassword(true)} />
+        <LinkAccountView
+          onLinkComplete={() => {
+            console.log('[DEBUG] LinkAccountView completed');
+            setHasToken(true);
+            setHasSeenExplainer(false); // Show explainer after linking
+          }}
+        />
       </div>
     );
   }
 
-  if (isLocked) {
+  // Step 2: Master Password Explainer - Educational carousel about Zero-Knowledge
+  if (!hasSeenExplainer) {
+    console.log('[DEBUG] Rendering MasterPasswordExplainerView');
+    return (
+      <div className="app">
+        <MasterPasswordExplainerView
+          onComplete={() => {
+            console.log('[DEBUG] MasterPasswordExplainerView completed');
+            // Mark explainer as seen
+            chrome.storage.local.set({ hasSeenExplainer: true });
+            setHasSeenExplainer(true);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Step 3: Setup Master Password - Create Master Password + Recovery Key
+  if (!hasMasterPassword) {
+    console.log('[DEBUG] Rendering SetupMasterPasswordView');
+    return (
+      <div className="app">
+        <SetupMasterPasswordView
+          onSetupComplete={() => {
+            console.log('[DEBUG] SetupMasterPasswordView completed');
+            setHasMasterPassword(true);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Step 4: Login - Unlock vault with Master Password (when vault is locked manually)
+  // Skip login screen when auto-locked to avoid popup spam
+  if (isLocked && !isAutoLocked) {
+    console.log('[DEBUG] Rendering LoginView');
     return (
       <div className="app">
         <LoginView />
       </div>
     );
   }
+
+  // Step 5: Main App - Password management interface
+  console.log('[DEBUG] Rendering main app interface');
 
   const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -168,6 +329,7 @@ function App() {
           onVaultChange={setActiveVaultId}
           onChangeMasterPassword={() => setShowChangePassword(true)}
           onLogout={handleLogout}
+          onLock={handleLock}
         />
       </Header>
 

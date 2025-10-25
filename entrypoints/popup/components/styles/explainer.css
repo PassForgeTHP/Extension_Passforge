@@ -1,0 +1,293 @@
+/* ============================================================================
+   Master Password Explainer Styles
+   ============================================================================
+
+   Carousel-style educational slides explaining Zero-Knowledge encryption
+   and Master Password before user creates one.
+   ============================================================================ */
+
+.explainer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.explainer-content {
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Progress dots */
+.progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot:hover {
+  background-color: #bbb;
+}
+
+.dot.active {
+  width: 32px;
+  border-radius: 6px;
+  background: var(--base-red, #af0024);
+}
+
+.dot.completed {
+  background-color: #4caf50;
+}
+
+/* Slide container */
+.slide {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  border-top: 4px solid var(--base-red, #af0024);
+  animation: slideIn 0.4s ease-out;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide header */
+.slide-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.slide-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.slide-icon.warning {
+  color: #ff9800;
+}
+
+.slide-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* Slide body */
+.slide-body {
+  flex: 1;
+  line-height: 1.6;
+  color: #333;
+}
+
+.slide-body p {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+}
+
+.slide-body strong {
+  color: var(--base-red, #af0024);
+  font-weight: 600;
+}
+
+.slide-body ul {
+  margin: 16px 0;
+  padding-left: 24px;
+}
+
+.slide-body li {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+/* Warning text styling */
+.warning-text {
+  padding: 16px;
+  background-color: #fff3cd;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 15px;
+}
+
+/* Tip box */
+.tip-box {
+  padding: 16px;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  margin: 16px 0;
+}
+
+.tip-box strong {
+  color: #1565c0;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.tip-box ul {
+  margin: 8px 0 0 0;
+}
+
+.tip-box li {
+  color: #1565c0;
+  font-size: 13px;
+}
+
+/* Recovery note */
+.recovery-note {
+  padding: 12px;
+  background-color: #f1f8e9;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #558b2f;
+  margin-top: 16px;
+}
+
+/* Navigation buttons */
+.navigation-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.btn-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-previous {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.btn-previous:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.btn-previous:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-next,
+.btn-complete {
+  background: var(--gradient-dark, linear-gradient(90deg, #af0024 0%, #77080e 50%, #470508 100%));
+  color: white;
+  flex: 1;
+}
+
+.btn-next:hover,
+.btn-complete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(175, 0, 36, 0.3);
+}
+
+.btn-complete {
+  background: linear-gradient(90deg, #4caf50 0%, #388e3c 100%);
+}
+
+.btn-complete:hover {
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.btn-nav svg {
+  font-size: 18px;
+}
+
+/* Skip button */
+.btn-skip {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.btn-skip:hover {
+  color: #666;
+}
+
+/* Scrollbar styling */
+.explainer-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.explainer-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.explainer-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.explainer-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .slide {
+    padding: 24px 16px;
+    min-height: 350px;
+  }
+
+  .slide-icon {
+    font-size: 48px;
+  }
+
+  .slide-header h2 {
+    font-size: 18px;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+  }
+
+  .btn-nav {
+    width: 100%;
+    justify-content: center;
+  }
+}

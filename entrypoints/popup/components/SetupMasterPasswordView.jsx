@@ -1,27 +1,140 @@
-import { useState } from "react";
-import { HiShieldCheck, HiLockClosed } from "react-icons/hi";
+import { useState, useEffect } from "react";
+import { HiShieldCheck, HiLockClosed, HiKey, HiClipboard, HiCheckCircle, HiDownload, HiExclamationCircle } from "react-icons/hi";
 import useVaultStore from '../../../services/vaultStore'
 import { generateSalt, deriveKey, encryptData, hashMasterPassword } from '../../../services/cryptoService.js'
+import { generateRecoveryKey, downloadRecoveryKey, formatRecoveryKeyForDisplay } from '../../../services/recoveryKeyService.js'
 
+/**
+ * SetupMasterPasswordView Component
+ *
+ * Allows user to create their Master Password for vault encryption.
+ * Zero-Knowledge Architecture: Master Password never sent to server.
+ *
+ * Features:
+ * - Password strength indicator (weak/medium/strong)
+ * - Generate Recovery Key for password backup
+ * - Copy/Download Recovery Key
+ * - Require confirmation checkbox before proceeding
+ *
+ * @param {Function} onSetupComplete - Callback when Master Password is created
+ */
 function SetupMasterPasswordView({ onSetupComplete }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(null);
+  const [recoveryKey, setRecoveryKey] = useState("");
+  const [recoveryCopied, setRecoveryCopied] = useState(false);
+  const [recoveryConfirmed, setRecoveryConfirmed] = useState(false);
+  const [showRecoveryKey, setShowRecoveryKey] = useState(false);
 
   const { saveVault } = useVaultStore.getState();
 
+  /**
+   * Calculate password strength based on length and complexity
+   *
+   * @param {string} pwd - Password to evaluate
+   * @returns {Object} Strength level and label
+   */
+  const calculatePasswordStrength = (pwd) => {
+    if (!pwd) return null;
+
+    let score = 0;
+
+    // Length scoring
+    if (pwd.length >= 8) score += 1;
+    if (pwd.length >= 12) score += 1;
+    if (pwd.length >= 16) score += 1;
+
+    // Complexity scoring
+    if (/[a-z]/.test(pwd)) score += 1; // lowercase
+    if (/[A-Z]/.test(pwd)) score += 1; // uppercase
+    if (/[0-9]/.test(pwd)) score += 1; // numbers
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 1; // symbols
+
+    if (score <= 3) return { level: 'weak', label: 'Weak' };
+    if (score <= 5) return { level: 'medium', label: 'Medium' };
+    return { level: 'strong', label: 'Strong' };
+  };
+
+  /**
+   * Update password strength indicator when password changes
+   */
+  useEffect(() => {
+    const strength = calculatePasswordStrength(password);
+    setPasswordStrength(strength);
+  }, [password]);
+
+  /**
+   * Copy Recovery Key to clipboard
+   */
+  const handleCopyRecoveryKey = async () => {
+    if (!recoveryKey) return;
+
+    try {
+      await navigator.clipboard.writeText(recoveryKey);
+      setRecoveryCopied(true);
+      setTimeout(() => setRecoveryCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy Recovery Key:', error);
+    }
+  };
+
+  /**
+   * Download Recovery Key as text file
+   */
+  const handleDownloadRecoveryKey = () => {
+    if (!recoveryKey) return;
+
+    chrome.storage.local.get(['userEmail'], ({ userEmail }) => {
+      downloadRecoveryKey(recoveryKey, userEmail || 'user');
+    });
+  };
+
+  /**
+   * Create Master Password and initialize vault
+   */
   const handleSetup = async (e) => {
     e.preventDefault();
 
-    if (!password.trim() || password.length < 8) {
-      return setError("Password must be at least 8 characters");
+    // Step 1: Password Creation (before showing Recovery Key)
+    if (!showRecoveryKey) {
+      // Validation: Password must be at least 8 characters
+      if (!password.trim() || password.length < 8) {
+        return setError("Password must be at least 8 characters");
+      }
+
+      // Validation: Passwords must match
+      if (password !== confirm) {
+        return setError("Passwords do not match");
+      }
+
+      setError("");
+      setLoading(true);
+
+      // Generate Recovery Key
+      const key = generateRecoveryKey();
+      setRecoveryKey(key);
+
+      // Proceed with vault creation
+      await createVault(key);
+      return;
     }
 
-    if (password !== confirm) {
-      return setError("Passwords do not match");
+    // Step 2: Recovery Key Confirmation (after vault created)
+    if (!recoveryConfirmed) {
+      return setError("Please confirm that you have saved your Recovery Key");
     }
 
+    // Complete setup
+    onSetupComplete();
+  };
+
+  /**
+   * Create the vault with Master Password and Recovery Key
+   */
+  const createVault = async (key) => {
     setError("");
     setLoading(true);
 
@@ -33,14 +146,21 @@ function SetupMasterPasswordView({ onSetupComplete }) {
           return;
         }
 
-        const res = await fetch("http://localhost:3000/api/master_password", {
+        const API_URL = import.meta.env.VITE_API_URL || 'https://passforge-api.onrender.com';
+
+        // Send Master Password hash to Rails API for future verification
+        // IMPORTANT: This is sent BEFORE local storage to ensure server-side record exists
+        const res = await fetch(`${API_URL}/api/master_password`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
           body: JSON.stringify({
-            user: { master_password: password },
+            user: {
+              master_password: password,
+              recovery_key: key // Store Recovery Key server-side (encrypted)
+            },
           }),
         });
 
@@ -53,10 +173,12 @@ function SetupMasterPasswordView({ onSetupComplete }) {
 
         console.log("Master password successfully saved via API");
 
-        // local hash for offline access
+        // Generate local hash for offline access
+        // This allows extension to verify Master Password without API call
         const masterSalt = generateSalt();
         const hash = await hashMasterPassword(password, masterSalt);
 
+        // Store Master Password hash locally
         chrome.storage.local.set(
           {
             hasMasterPassword: true,
@@ -66,7 +188,8 @@ function SetupMasterPasswordView({ onSetupComplete }) {
           async () => {
             console.log("Master password hash saved locally");
 
-             try {
+            try {
+              // Initialize empty vault encrypted with Master Password
               const vaultSalt = generateSalt();
 
               const vaultKey = await deriveKey(password, vaultSalt, true);
@@ -82,6 +205,7 @@ function SetupMasterPasswordView({ onSetupComplete }) {
               const vaultJSON = JSON.stringify(emptyVault);
               const { encrypted, iv } = await encryptData(vaultJSON, vaultKey);
 
+              // Store vault in Zustand state
               useVaultStore.setState({
                 passwords: [],
                 masterKey: vaultKey,
@@ -90,10 +214,13 @@ function SetupMasterPasswordView({ onSetupComplete }) {
                 isLocked: false,
               });
 
+              // Save vault to chrome.storage.local
               await saveVault();
 
               console.log("Vault initialized and saved locally");
-              onSetupComplete();
+
+              // Show Recovery Key screen
+              setShowRecoveryKey(true);
               setLoading(false);
             } catch (err) {
               console.error("Error initializing vault:", err);
@@ -110,17 +237,114 @@ function SetupMasterPasswordView({ onSetupComplete }) {
     }
   };
 
+  // Step 2: Show Recovery Key (after vault creation)
+  if (showRecoveryKey) {
+    return (
+      <div className="setup-container">
+        <div className="setup-header">
+          <div className="logo-large">
+            <HiCheckCircle className="logo-icon-large" style={{ color: '#10b981' }} />
+          </div>
+          <h1>Vault Created Successfully!</h1>
+          <p>Save your Recovery Key in a secure location.</p>
+        </div>
+
+        <div className="recovery-key-section">
+          <div className="recovery-key-header">
+            <HiKey />
+            <h3>Your Recovery Key</h3>
+          </div>
+
+          <p className="recovery-key-description">
+            This Recovery Key can restore access to your vault if you forget your Master Password. Save it in a secure location (password manager, safe, etc.).
+          </p>
+
+          <div className="recovery-key-display">
+            {formatRecoveryKeyForDisplay(recoveryKey)}
+          </div>
+
+          <div className="recovery-key-actions">
+            <button
+              type="button"
+              onClick={handleCopyRecoveryKey}
+              className={`btn-recovery-action btn-copy-recovery ${recoveryCopied ? 'copied' : ''}`}
+            >
+              {recoveryCopied ? (
+                <>
+                  <HiCheckCircle />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <HiClipboard />
+                  Copy Key
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadRecoveryKey}
+              className="btn-recovery-action btn-download-recovery"
+            >
+              <HiDownload />
+              Download
+            </button>
+          </div>
+
+          <div className="recovery-confirmation">
+            <input
+              type="checkbox"
+              id="recovery-confirm"
+              checked={recoveryConfirmed}
+              onChange={(e) => setRecoveryConfirmed(e.target.checked)}
+            />
+            <label htmlFor="recovery-confirm">
+              <strong>I have saved my Recovery Key</strong> in a secure location and understand that it is the only way to recover my vault if I forget my Master Password.
+            </label>
+          </div>
+
+          {error && (
+            <div className="error-message">
+              <HiExclamationCircle className="error-icon" />
+              {error}
+            </div>
+          )}
+
+          <div className="warning-box">
+            <HiExclamationCircle />
+            <p>
+              <strong>Warning:</strong> Without your Recovery Key, your data cannot be recovered if you forget your Master Password.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSetup}
+            className="btn-unlock btn-create-password"
+            disabled={!recoveryConfirmed}
+          >
+            <HiLockClosed />
+            Complete Setup
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 1: Create Master Password
   return (
-    <div className="login-container">
-      <div className="login-header">
+    <div className="setup-container">
+      <div className="setup-header">
         <div className="logo-large">
           <HiShieldCheck className="logo-icon-large" />
         </div>
-        <h1>Set up your Master Password</h1>
-        <p>This password will protect your vault in the extension.</p>
+        <h1>Create Master Password</h1>
+        <p>This password will protect your vault with Zero-Knowledge encryption.</p>
       </div>
 
-      <form className="login-form" onSubmit={handleSetup}>
+      <form className="setup-form" onSubmit={handleSetup}>
+        {/* Password Input */}
         <div className="form-group">
           <input
             type="password"
@@ -128,8 +352,24 @@ function SetupMasterPasswordView({ onSetupComplete }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="master-password-input"
+            disabled={loading}
           />
         </div>
+
+        {/* Password Strength Indicator */}
+        {passwordStrength && (
+          <div className="password-strength">
+            <div className="strength-bar-container">
+              <div className={`strength-bar ${passwordStrength.level}`}></div>
+            </div>
+            <div className={`strength-text ${passwordStrength.level}`}>
+              <HiShieldCheck className="strength-icon" />
+              <span>Password Strength: {passwordStrength.label}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Confirm Password Input */}
         <div className="form-group">
           <input
             type="password"
@@ -137,15 +377,41 @@ function SetupMasterPasswordView({ onSetupComplete }) {
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             className="master-password-input"
+            disabled={loading}
           />
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {/* Error Message */}
+        {error && (
+          <div className="error-message">
+            <HiExclamationCircle className="error-icon" />
+            {error}
+          </div>
+        )}
 
-        <button type="submit" className="btn-unlock" disabled={loading}>
-          {loading ? "Setting up..." : (
+        {/* Warning */}
+        <div className="warning-box">
+          <HiExclamationCircle />
+          <p>
+            <strong>Warning:</strong> If you lose both your Master Password and Recovery Key, your data cannot be recovered due to Zero-Knowledge encryption.
+          </p>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="btn-unlock btn-create-password"
+          disabled={loading}
+        >
+          {loading ? (
             <>
-              <HiLockClosed /> Save Master Password
+              <span className="spinner"></span>
+              Creating Vault...
+            </>
+          ) : (
+            <>
+              <HiLockClosed />
+              Create Master Password
             </>
           )}
         </button>

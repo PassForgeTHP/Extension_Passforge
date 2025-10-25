@@ -13,6 +13,7 @@
 
 /* Views */
 @import './styles/login.css';
+@import './styles/setupMasterPassword.css';
 
 /* Layout Components */
 @import './styles/sidebar.css';

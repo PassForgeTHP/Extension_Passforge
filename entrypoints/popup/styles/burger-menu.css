@@ -43,7 +43,8 @@
   top: 0;
   left: 0;
   width: 280px;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
   background: var(--dark);
   border-right: 1px solid rgba(227, 211, 191, 0.3);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
@@ -53,15 +54,44 @@
   animation: slideInFromLeft 0.3s ease-out;
 }
 
-.burger-header {
+/* Account Header */
+.burger-account-header {
   padding: 1.5rem;
   border-bottom: 1px solid rgba(227, 211, 191, 0.2);
+  background: rgba(175, 0, 36, 0.05);
 }
 
-.burger-header h3 {
-  margin: 0 0 1rem 0;
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.account-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--medium-red);
+  flex-shrink: 0;
+}
+
+.account-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-label {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(227, 211, 191, 0.7);
+  margin-bottom: 0.25rem;
+}
+
+.account-email {
+  display: block;
+  font-size: 0.9rem;
   color: var(--light);
-  font-size: 1.1rem;
+  font-weight: 600;
+  word-break: break-all;
 }
 
 .vault-add-btn-menu {
@@ -132,8 +162,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.burger-vault-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 
 .burger-vault-name {
@@ -192,12 +227,44 @@
   margin: 1rem 0;
 }
 
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  margin: 0;
+  color: var(--light);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Burger Menu Scrollable Content */
+.burger-menu-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Burger Menu Section */
 .burger-section {
-  padding: 0.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.burger-section:first-of-type {
+  padding-top: 0.5rem;
+}
+
+.burger-section:last-of-type {
+  padding-bottom: 1.5rem;
 }
 
 .burger-menu-item {
@@ -232,6 +299,18 @@
 
 .burger-menu-item.logout:hover {
   background: var(--medium-red);
+  transform: translateX(4px);
+}
+
+.burger-menu-item.destructive {
+  background: rgba(139, 0, 0, 0.1);
+  border-color: #8b0000;
+  color: #ff6b6b;
+}
+
+.burger-menu-item.destructive:hover {
+  background: #8b0000;
+  color: white;
   transform: translateX(4px);
 }
 

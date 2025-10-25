@@ -46,3 +46,114 @@ input:focus {
 input::placeholder {
   color: rgba(227, 211, 191, 0.5);
 }
+
+/* Password Input Groups */
+.password-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: rgba(227, 211, 191, 0.7);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: var(--light);
+  background: rgba(227, 211, 191, 0.1);
+}
+
+.password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(227, 211, 191, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 3px;
+}
+
+.strength-weak {
+  background: #ef4444;
+}
+
+.strength-medium {
+  background: #f59e0b;
+}
+
+.strength-strong {
+  background: #10b981;
+}
+
+.strength-text {
+  font-size: 0.85rem;
+  color: var(--light);
+  font-weight: 600;
+  min-width: 80px;
+}
+
+/* Generate Password Button */
+.generate-password-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(175, 0, 36, 0.15);
+  border: 1px solid var(--medium-red);
+  border-radius: 8px;
+  color: var(--light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.generate-password-btn:hover {
+  background: var(--medium-red);
+  transform: translateY(-1px);
+}
+
+.generate-password-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Form Description */
+.form-description {
+  color: rgba(227, 211, 191, 0.8);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
