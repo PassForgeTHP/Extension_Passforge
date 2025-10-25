@@ -67,14 +67,15 @@ export function generateIV() {
  *
  * @param {string} password - User's Master Password
  * @param {Uint8Array} salt - Unique 32-byte salt
- * @returns {Promise<CryptoKey>} AES-256-GCM key (non-extractable)
+ * @param {boolean} extractable - Whether the key should be extractable (default: false)
+ * @returns {Promise<CryptoKey>} AES-256-GCM key
  *
  * @example
  * const salt = generateSalt();
  * const key = await deriveKey("MyPassword123!", salt);
  * // key = CryptoKey { type: "secret", algorithm: "AES-GCM", ... }
  */
-export async function deriveKey(password, salt) {
+export async function deriveKey(password, salt, extractable = false) {
   // Convert password to ArrayBuffer
   const passwordBuffer = new TextEncoder().encode(password);
 
@@ -100,7 +101,7 @@ export async function deriveKey(password, salt) {
       name: 'AES-GCM',
       length: 256 // 256 bits
     },
-    false, // Non-extractable (cannot be exported)
+    extractable, // Extractable for session storage if needed
     ['encrypt', 'decrypt']
   );
 
@@ -202,4 +203,87 @@ export async function decryptData(encryptedData, key, iv) {
   const plaintext = new TextDecoder().decode(decrypted);
 
   return plaintext;
+}
+
+// ============================================================================
+// 6. KEY EXPORT/IMPORT FOR SESSION STORAGE
+// ============================================================================
+
+/**
+ * Export a CryptoKey to JWK format for storage
+ * @param {CryptoKey} key - The key to export (must be extractable)
+ * @returns {Promise<Object>} JWK object
+ */
+export async function exportKey(key) {
+  return await crypto.subtle.exportKey('jwk', key);
+}
+
+/**
+ * Import a JWK key back to CryptoKey
+ * @param {Object} jwk - JWK object
+ * @param {boolean} extractable - Whether the imported key should be extractable
+ * @returns {Promise<CryptoKey>} Imported CryptoKey
+ */
+export async function importKey(jwk, extractable = false) {
+  return await crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    {
+      name: 'AES-GCM',
+      length: 256
+    },
+    extractable,
+    ['encrypt', 'decrypt']
+  );
+}
+
+// ============================================================================
+// 7. MASTER PASSWORD HASHING FOR OFFLINE VERIFICATION
+// ============================================================================
+
+/**
+ * Hashes a master password for offline verification using PBKDF2
+ * @param {string} password - Master password
+ * @param {Uint8Array} salt - Salt for hashing
+ * @returns {Promise<string>} Base64 encoded hash
+ */
+export async function hashMasterPassword(password, salt) {
+  const passwordBuffer = new TextEncoder().encode(password);
+
+  const passwordKey = await crypto.subtle.importKey(
+    'raw',
+    passwordBuffer,
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+
+  const hashBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 600000,
+      hash: 'SHA-256'
+    },
+    passwordKey,
+    256 // 256 bits
+  );
+
+  // Convert to base64 for storage
+  const hashArray = new Uint8Array(hashBits);
+  const hashBase64 = btoa(String.fromCharCode(...hashArray));
+
+  return hashBase64;
+}
+
+/**
+ * Verifies a master password against a stored hash
+ * @param {string} password - Master password to verify
+ * @param {string} storedHash - Base64 encoded hash
+ * @param {Uint8Array} salt - Salt used for hashing
+ * @returns {Promise<boolean>} True if password matches
+ */
+export async function verifyMasterPassword(password, storedHash, salt) {
+  const computedHash = await hashMasterPassword(password, salt);
+  return computedHash === storedHash;
 }

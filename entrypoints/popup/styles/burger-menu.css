@@ -1,0 +1,321 @@
+/* Burger Menu - Slide-out Navigation Menu */
+
+.burger-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(175, 0, 36, 0.15);
+  border: 1px solid var(--medium-red);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  margin-right: 0.75rem;
+}
+
+.burger-btn:hover {
+  background: var(--medium-red);
+  transform: scale(1.05);
+}
+
+.burger-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.burger-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.burger-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  max-height: 100vh;
+  background: var(--dark);
+  border-right: 1px solid rgba(227, 211, 191, 0.3);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* Account Header */
+.burger-account-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(227, 211, 191, 0.2);
+  background: rgba(175, 0, 36, 0.05);
+}
+
+.account-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.account-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--medium-red);
+  flex-shrink: 0;
+}
+
+.account-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-label {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(227, 211, 191, 0.7);
+  margin-bottom: 0.25rem;
+}
+
+.account-email {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--light);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.vault-add-btn-menu {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(175, 0, 36, 0.15);
+  border: 1px solid var(--medium-red);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  color: var(--light);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.vault-add-btn-menu:hover {
+  background: var(--medium-red);
+  transform: translateY(-1px);
+}
+
+.vault-add-btn-menu svg {
+  width: 18px;
+  height: 18px;
+}
+
+.burger-vaults-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.burger-vault-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  text-align: left;
+  width: 100%;
+}
+
+.burger-vault-item:hover {
+  background: rgba(227, 211, 191, 0.05);
+  border-color: rgba(227, 211, 191, 0.2);
+}
+
+.burger-vault-item.active {
+  background: rgba(175, 0, 36, 0.15);
+  border-color: var(--medium-red);
+}
+
+.burger-vault-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.burger-vault-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.burger-vault-name {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--light);
+}
+
+.burger-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(227, 211, 191, 0.2);
+}
+
+.burger-trash-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(227, 211, 191, 0.05);
+  border: 1px solid rgba(227, 211, 191, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  color: rgba(227, 211, 191, 0.7);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.burger-trash-btn:hover {
+  background: rgba(175, 0, 36, 0.1);
+  border-color: var(--medium-red);
+  color: var(--light);
+}
+
+.burger-trash-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.burger-trash-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Burger Menu Separator */
+.burger-separator {
+  height: 1px;
+  background: rgba(227, 211, 191, 0.2);
+  margin: 1rem 0;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  margin: 0;
+  color: var(--light);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Burger Menu Scrollable Content */
+.burger-menu-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Burger Menu Section */
+.burger-section {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.burger-section:first-of-type {
+  padding-top: 0.5rem;
+}
+
+.burger-section:last-of-type {
+  padding-bottom: 1.5rem;
+}
+
+.burger-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(227, 211, 191, 0.05);
+  border: 1px solid rgba(227, 211, 191, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+  color: var(--light);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.burger-menu-item:hover {
+  background: rgba(227, 211, 191, 0.1);
+  border-color: rgba(227, 211, 191, 0.3);
+  transform: translateX(4px);
+}
+
+.burger-menu-item.logout {
+  background: rgba(175, 0, 36, 0.1);
+  border-color: var(--medium-red);
+  color: var(--light);
+}
+
+.burger-menu-item.logout:hover {
+  background: var(--medium-red);
+  transform: translateX(4px);
+}
+
+.burger-menu-item.destructive {
+  background: rgba(139, 0, 0, 0.1);
+  border-color: #8b0000;
+  color: #ff6b6b;
+}
+
+.burger-menu-item.destructive:hover {
+  background: #8b0000;
+  color: white;
+  transform: translateX(4px);
+}
+
+.menu-item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}

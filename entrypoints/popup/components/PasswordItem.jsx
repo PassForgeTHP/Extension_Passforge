@@ -1,116 +1,148 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import {
+  HiEye,
+  HiEyeOff,
+  HiClipboardCopy,
+  HiPencil,
+  HiTrash,
+  HiGlobe,
+  HiUser,
+  HiKey,
+  HiDocumentText,
+  HiChevronDown,
+  HiChevronRight
+} from 'react-icons/hi';
 
 function PasswordItem({ password, onCopyUsername, onCopyPassword, copiedId, onEdit, onDelete }) {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showNotes, setShowNotes] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
+  const handleCopyUsername = () => {
+    onCopyUsername(password.username, `${password.id}-user`);
+  };
+
+  const handleCopyPassword = () => {
+    onCopyPassword(password.password, `${password.id}-pass`);
+  };
 
   return (
     <div className="password-item">
-      <div className="password-item-header">
-        <div className="password-icon">{password.name?.[0] || '?'}</div>
-        <div className="password-info">
-          <div className="password-name">{password.name || 'Untitled'}</div>
-          {password.domain && (
-            <div className="password-field">
-              <span className="password-label">Domain:</span>
-              <span className="password-value">{password.domain}</span>
-            </div>
-          )}
-          <div
-            className="password-field clickable"
-            onClick={onCopyUsername}
-            title="Click to copy username"
-          >
-            <span className="password-label">Username:</span>
-            <span className="password-value">
-              {copiedId === `${password.id}-user` ? 'Copied!' : password.username}
-            </span>
-          </div>
-          <div className="password-field">
-            <span className="password-label">Password:</span>
-            <span className="password-value">
-              {copiedId === `${password.id}-pass` ? 'Copied!' : (showPassword ? password.password : '••••••••')}
-            </span>
-            <div style={{ display: 'flex', gap: '4px' }}>
+      <div className="password-item-main">
+        <div className="password-avatar">
+          {getInitials(password.name)}
+        </div>
+
+        <div className="password-content">
+          <div className="password-header-row">
+            <h3 className="password-title">{password.name || 'Untitled'}</h3>
+            <div className="password-quick-actions">
               <button
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--medium-red)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  padding: '2px 6px'
-                }}
+                className="icon-btn"
+                onClick={handleCopyUsername}
+                title="Copy username"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {copiedId === `${password.id}-user` ? (
+                  <span className="copied-text">✓</span>
+                ) : (
+                  <HiUser />
+                )}
               </button>
               <button
-                onClick={onCopyPassword}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--medium-red)',
-                  cursor: 'pointer',
-                  fontSize: '0.75rem',
-                  padding: '2px 6px'
-                }}
+                className="icon-btn"
+                onClick={handleCopyPassword}
+                title="Copy password"
               >
-                Copy
+                {copiedId === `${password.id}-pass` ? (
+                  <span className="copied-text">✓</span>
+                ) : (
+                  <HiKey />
+                )}
               </button>
             </div>
           </div>
-          {password.notes && (
-            <div className="password-field">
-              <span
-                className="password-label clickable"
-                onClick={() => setShowNotes(!showNotes)}
-                style={{ cursor: 'pointer', userSelect: 'none' }}
-              >
-                Notes: {showNotes ? '▼' : '▶'}
+
+          <div className="password-meta">
+            {password.domain && (
+              <span className="meta-item">
+                <HiGlobe className="meta-icon" />
+                {password.domain}
               </span>
-              {showNotes && (
-                <div className="password-notes" style={{ marginTop: '4px', fontSize: '0.85rem' }}>
-                  {password.notes}
+            )}
+            <span className="meta-item">
+              <HiUser className="meta-icon" />
+              {password.username}
+            </span>
+          </div>
+
+          {(password.notes || password.created_at) && (
+            <button
+              className="toggle-details-btn"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              {showDetails ? <HiChevronDown /> : <HiChevronRight />}
+              <span>Details</span>
+            </button>
+          )}
+
+          {showDetails && (
+            <div className="password-details">
+              <div className="detail-row">
+                <span className="detail-label">
+                  <HiKey />
+                  Password
+                </span>
+                <div className="detail-value-wrapper">
+                  <span className="detail-value">
+                    {showPassword ? password.password : '••••••••••••'}
+                  </span>
+                  <button
+                    className="icon-btn-small"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <HiEyeOff /> : <HiEye />}
+                  </button>
+                </div>
+              </div>
+
+              {password.notes && (
+                <div className="detail-row notes-row">
+                  <span className="detail-label">
+                    <HiDocumentText />
+                    Notes
+                  </span>
+                  <p className="notes-content">{password.notes}</p>
+                </div>
+              )}
+
+              {password.created_at && (
+                <div className="detail-timestamp">
+                  Created {new Date(password.created_at).toLocaleDateString()}
                 </div>
               )}
             </div>
           )}
-          {password.created_at && (
-            <div className="password-timestamp" style={{ fontSize: '0.7rem', color: '#999', marginTop: '8px' }}>
-              Created: {new Date(password.created_at).toLocaleDateString()}
-            </div>
-          )}
         </div>
       </div>
-      <div className="password-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+
+      <div className="password-actions">
         <button
+          className="action-btn edit-btn"
           onClick={() => onEdit(password)}
-          style={{
-            background: 'transparent',
-            border: '1px solid var(--medium-red)',
-            color: 'var(--medium-red)',
-            cursor: 'pointer',
-            fontSize: '0.75rem',
-            padding: '4px 12px',
-            borderRadius: '4px'
-          }}
+          title="Edit"
         >
-          Edit
+          <HiPencil />
         </button>
         <button
+          className="action-btn delete-btn"
           onClick={() => onDelete(password.id)}
-          style={{
-            background: 'var(--medium-red)',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '0.75rem',
-            padding: '4px 12px',
-            borderRadius: '4px'
-          }}
+          title="Delete"
         >
-          Delete
+          <HiTrash />
         </button>
       </div>
     </div>

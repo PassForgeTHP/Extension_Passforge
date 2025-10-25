@@ -1,0 +1,105 @@
+/* Header - Application Header with Logo and Actions */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(227, 211, 191, 0.2);
+  background: rgba(227, 211, 191, 0.03);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--medium-red);
+  filter: drop-shadow(0 0 4px rgba(175, 0, 36, 0.5));
+}
+
+.logo-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: var(--gradient-dark);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.item-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  background: rgba(175, 0, 36, 0.15);
+  border: 1px solid var(--medium-red);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--light);
+}
+
+.btn-lock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  background: rgba(227, 211, 191, 0.1);
+  border: 1px solid rgba(227, 211, 191, 0.3);
+}
+
+.btn-lock:hover {
+  background: rgba(175, 0, 36, 0.2);
+  border-color: var(--medium-red);
+}
+
+.lock-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Header Add Button */
+.btn-add-header {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-dark);
+  border: 2px solid var(--medium-red);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(175, 0, 36, 0.4);
+  color: var(--light);
+}
+
+.btn-add-header:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 16px rgba(175, 0, 36, 0.6);
+}
+
+.btn-add-header:active {
+  transform: scale(0.95) rotate(90deg);
+}
+
+.btn-add-header svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}

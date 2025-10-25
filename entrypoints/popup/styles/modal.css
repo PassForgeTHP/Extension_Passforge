@@ -1,0 +1,86 @@
+/* Modal - Overlay and Content Container */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--dark);
+  border: 1px solid rgba(227, 211, 191, 0.3);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid rgba(227, 211, 191, 0.2);
+  background: rgba(227, 211, 191, 0.03);
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--medium-red);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--light);
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(227, 211, 191, 0.1);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.modal-close-btn:hover {
+  background: rgba(175, 0, 36, 0.2);
+  transform: scale(1.05) rotate(90deg);
+}
+
+.modal-close-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.modal-content form {
+  padding: 1.25rem;
+}

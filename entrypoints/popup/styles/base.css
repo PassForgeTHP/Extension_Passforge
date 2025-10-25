@@ -1,0 +1,33 @@
+/* Base Styles - Reset and HTML Structure */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 600px;
+  height: 430px;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--dark);
+  color: var(--light);
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--dark);
+}

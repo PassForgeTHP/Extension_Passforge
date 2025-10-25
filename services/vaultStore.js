@@ -4,13 +4,17 @@ import {
   generateIV,
   deriveKey,
   encryptData,
-  decryptData
+  decryptData,
+  exportKey,
+  importKey
 } from './cryptoService.js'
 import { vaultOperations } from './indexedDB.js'
+import { saveSession, clearSession, getSession } from './sessionService.js'
 
 const useVaultStore = create((set, get) => ({
   // State
   isLocked: true,
+  isAutoLocked: false, // Whether the current lock state is due to auto-lock
   passwords: [],
   masterKey: null, // CryptoKey object stored in RAM while unlocked
   salt: null, // 32-byte salt for PBKDF2 key derivation
@@ -76,8 +80,8 @@ const useVaultStore = create((set, get) => ({
           createdAt: new Date().toISOString()
         }
 
-        // Derive key from master password
-        const key = await deriveKey(masterPassword, newSalt)
+        // Derive key from master password (extractable for session storage)
+        const key = await deriveKey(masterPassword, newSalt, true)
 
         // Serialize vault to JSON
         const vaultJSON = JSON.stringify(emptyVault)
@@ -97,18 +101,27 @@ const useVaultStore = create((set, get) => ({
         // Set state for unlocked empty vault
         set({
           isLocked: false,
+          isAutoLocked: false, // Reset auto-lock state when manually unlocking
           passwords: [],
           masterKey: key,
           salt: newSalt,
           iv: iv
         })
 
+        // Save session for persistence across service worker restarts
+        const keyJWK = await exportKey(key)
+        await saveSession({
+          masterKey: keyJWK,
+          salt: Array.from(newSalt),
+          iv: Array.from(iv)
+        })
+
         return { success: true, message: 'Vault created and unlocked' }
       }
 
       // Decrypt existing vault
-      // Derive key from master password and stored salt
-      const key = await deriveKey(masterPassword, storedVault.salt)
+      // Derive key from master password and stored salt (extractable for session storage)
+      const key = await deriveKey(masterPassword, storedVault.salt, true)
 
       // Decrypt vault using stored IV
       const decryptedJSON = await decryptData(
@@ -123,10 +136,19 @@ const useVaultStore = create((set, get) => ({
       // Load passwords into RAM
       set({
         isLocked: false,
+        isAutoLocked: false, // Reset auto-lock state when manually unlocking
         passwords: vaultData.passwords || [],
         masterKey: key,
         salt: storedVault.salt,
         iv: storedVault.iv
+      })
+
+      // Save session for persistence across service worker restarts
+      const keyJWK = await exportKey(key)
+      await saveSession({
+        masterKey: keyJWK,
+        salt: Array.from(storedVault.salt),
+        iv: Array.from(storedVault.iv)
       })
 
       return { success: true, message: 'Vault unlocked successfully' }
@@ -137,16 +159,43 @@ const useVaultStore = create((set, get) => ({
   },
 
   /**
-   * Lock the vault by clearing all sensitive data from RAM.
+   * Lock the vault by clearing all sensitive data from RAM and session.
    */
-  lock: () => {
+  lock: async () => {
+    // Clear session storage
+    await clearSession()
+
+    // Clear RAM
     set({
       isLocked: true,
+      isAutoLocked: false, // Manual lock, not auto-lock
       passwords: [],
       masterKey: null,
       salt: null,
       iv: null
     })
+  },
+
+  /**
+   * Auto-lock the vault (called by background script)
+   */
+  autoLock: async () => {
+    const { isLocked } = get();
+    if (!isLocked) {
+      console.log('[VaultStore] Auto-locking vault');
+      // Clear session storage
+      await clearSession();
+
+      // Clear RAM and mark as auto-locked
+      set({
+        isLocked: true,
+        isAutoLocked: true, // This lock came from auto-lock
+        passwords: [],
+        masterKey: null,
+        salt: null,
+        iv: null
+      });
+    }
   },
 
   /**
@@ -200,6 +249,62 @@ const useVaultStore = create((set, get) => ({
     await saveVault()
 
     return { success: true }
+  },
+
+  /**
+   * Restore vault from session storage
+   * Used when service worker restarts
+   */
+  restoreFromSession: async () => {
+    try {
+      const session = await getSession()
+
+      if (!session || !session.masterKey) {
+        console.log('[VaultStore] No session to restore')
+        return { success: false, message: 'No session found' }
+      }
+
+      // Convert arrays back to Uint8Array
+      const salt = new Uint8Array(session.salt)
+      const iv = new Uint8Array(session.iv)
+
+      // Import master key from JWK
+      const masterKey = await importKey(session.masterKey, true)
+
+      // Get encrypted vault from IndexedDB
+      const storedVault = await vaultOperations.get()
+
+      if (!storedVault) {
+        console.log('[VaultStore] No vault in IndexedDB')
+        await clearSession()
+        return { success: false, message: 'No vault found' }
+      }
+
+      // Decrypt vault
+      const decryptedJSON = await decryptData(
+        storedVault.encrypted_vault,
+        masterKey,
+        iv
+      )
+
+      const vaultData = JSON.parse(decryptedJSON)
+
+      // Restore state
+      set({
+        isLocked: false,
+        passwords: vaultData.passwords || [],
+        masterKey,
+        salt,
+        iv
+      })
+
+      console.log('[VaultStore] Session restored successfully')
+      return { success: true, message: 'Session restored' }
+    } catch (error) {
+      console.error('[VaultStore] Failed to restore session:', error)
+      await clearSession()
+      return { success: false, error: error.message }
+    }
   },
 
   /**

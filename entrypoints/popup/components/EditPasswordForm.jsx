@@ -5,18 +5,18 @@ import {
   HiRefresh,
   HiChevronDown,
   HiChevronUp,
-  HiPlus
+  HiPencil
 } from 'react-icons/hi';
 import FormField from './FormField';
 import { generatePassword, calculatePasswordStrength } from '../../../services/passwordGenerator';
 
-function AddPasswordForm({ onClose, onSubmit }) {
+function EditPasswordForm({ password, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
-    name: '',
-    domain: '',
-    username: '',
-    password: '',
-    notes: ''
+    name: password?.name || '',
+    domain: password?.domain || '',
+    username: password?.username || '',
+    password: password?.password || '',
+    notes: password?.notes || ''
   });
 
   const [errors, setErrors] = useState({});
@@ -69,21 +69,15 @@ function AddPasswordForm({ onClose, onSubmit }) {
 
     setErrors({});
     onSubmit(formData);
-    setFormData({
-      name: '',
-      domain: '',
-      username: '',
-      password: '',
-      notes: ''
-    });
   };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <HiPlus className="modal-icon" />
-            <h2 className="modal-title">Add New Password</h2>
+            <HiPencil className="modal-icon" />
+            <h2 className="modal-title">Edit Password</h2>
           </div>
           <button onClick={onClose} className="modal-close-btn" title="Close">
             <HiX />
@@ -236,8 +230,8 @@ function AddPasswordForm({ onClose, onSubmit }) {
               type="submit"
               className="btn-submit"
             >
-              <HiPlus />
-              Add Password
+              <HiPencil />
+              Save Changes
             </button>
           </div>
         </form>
@@ -246,4 +240,4 @@ function AddPasswordForm({ onClose, onSubmit }) {
   );
 }
 
-export default AddPasswordForm;
+export default EditPasswordForm;

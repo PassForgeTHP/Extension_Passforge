@@ -1,12 +1,18 @@
 import { useState } from 'react';
+import { HiShieldCheck, HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import useVaultStore from '../../../services/vaultStore';
+import { useBackgroundMessage } from '../hooks/useBackgroundMessage';
+import { verifyMasterPassword } from '../../../services/cryptoService.js';
+
 
 function LoginView() {
   const unlock = useVaultStore(state => state.unlock);
+  const { unlockVault: unlockBackground } = useBackgroundMessage();
 
   const [masterPassword, setMasterPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,38 +25,97 @@ function LoginView() {
     setLoading(true);
     setError('');
 
-    const result = await unlock(masterPassword);
+    try {
+      chrome.storage.local.get(['masterPasswordHash', 'masterPasswordSalt'], async ({ masterPasswordHash, masterPasswordSalt }) => {
+        if (!masterPasswordHash || !masterPasswordSalt) {
+          // Master password not found locally - clear storage and restart onboarding
+          // This ensures user goes through full flow: Link Account → Explainer → Setup MP
+          console.warn("Master password hash not found locally. Clearing storage and restarting onboarding...");
+          await chrome.storage.local.clear();
+          window.location.reload();
+          return;
+        }
 
-    if (!result.success) {
-      setError(result.error || 'Invalid master password');
+        const isValid = await verifyMasterPassword(masterPassword, masterPasswordHash, new Uint8Array(masterPasswordSalt));
+        if (!isValid) {
+          setError("Invalid master password");
+          setLoading(false);
+          return;
+        }
+
+        const [popupResult, backgroundResult] = await Promise.all([
+          unlock(masterPassword),
+          unlockBackground(masterPassword),
+        ]);
+
+        if (!popupResult.success || !backgroundResult.success) {
+          setError(popupResult.error || backgroundResult.error || "Vault unlock failed");
+          setLoading(false);
+          return;
+        }
+
+        // console.log("Vault successfully unlocked!");
+        setLoading(false);
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
       setLoading(false);
     }
-    // If success, isLocked becomes false automatically
   };
+
 
   return (
     <div className="login-container">
       <div className="login-header">
-        <div className="logo">PF</div>
+        <div className="logo-large">
+          <HiShieldCheck className="logo-icon-large" />
+        </div>
         <h1>PassForge</h1>
-        <p>Enter your master password to unlock</p>
+        <p>Enter your master password to unlock your vault</p>
       </div>
 
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <input
-            type="password"
-            placeholder="Master password"
-            value={masterPassword}
-            onChange={(e) => setMasterPassword(e.target.value)}
-            autoFocus
-          />
+          <div className="password-input-wrapper">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Master password"
+              value={masterPassword}
+              onChange={(e) => setMasterPassword(e.target.value)}
+              autoFocus
+              className="master-password-input"
+            />
+            <button
+              type="button"
+              className="toggle-password-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+            >
+              {showPassword ? <HiEyeOff /> : <HiEye />}
+            </button>
+          </div>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && (
+          <div className="error-message shake">
+            <HiLockClosed className="error-icon" />
+            {error}
+          </div>
+        )}
 
         <button type="submit" className="btn-unlock" disabled={loading}>
-          {loading ? 'Unlocking...' : 'Unlock'}
+          {loading ? (
+            <>
+              <span className="spinner"></span>
+              Unlocking...
+            </>
+          ) : (
+            <>
+              <HiLockClosed />
+              Unlock Vault
+            </>
+          )}
         </button>
       </form>
     </div>
